@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "name": "Hot Espresso",
+    "description": "It is luxuriously creamy with a kiss of foamy crema and a lingering aftertaste",
+    "price": 1,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2483361.jpg",
+    "category":"hot_coffee"
+  },
+  {
+    "id": 2,
+    "name": "Hot Vanilla Latte",
+    "description": "The combination of espresso with vanilla syrup (For ref only)",
+    "price": 2.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486518.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 3,
+    "name": "Hot Coffee Latte",
+    "description": "Iced latte has a mild, milky flavor with just a hint of coffee (For ref only)",
+    "price": 2.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486518.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 4,
+    "name": "Hot Americano",
+    "description": "Is an espresso-based drink designed to resemble coffee brewed in a drip filter (For ref only)",
+    "price": 1.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486517.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 5,
+    "name": "Hot Honey Black Coffee",
+    "description": "Black coffee is simply brewed coffee that add honey to make it more addict-able (For ref only)",
+    "price": 3.75,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486517.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 6,
+    "name": "Hot Cappuccino",
+    "description": "An espresso-based coffee drink that prepared with steamed milk foam (For ref only)",
+    "price": 2.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486520.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 7,
+    "name": "Hot Mocha",
+    "description": "It combines cold brew with milk and chocolate flavoring",
+    "price": 3.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486518.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 8,
+    "name": "Hot Coffee Hub",
+    "description": "A perfect balance between coffee and the sweetness of the milk (For ref only)",
+    "price": 2.75,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486519.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 9,
+    "name": "Hot Green Latte",
+    "description": "Refreshing Drink.",
+    "price": 2.25,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486521.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 10,
+    "name": "Hot Fresh Milk",
+    "description": "Refreshing Drink (For ref only)",
+    "price": 1.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486542.jpg",
+    "category": "hot_coffee"
+  },
+  {
+    "id": 11,
+    "name": "Iced Americano",
+    "description": "A drink to keep you awake.",
+    "price": 1.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486528.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 12,
+    "name": "Iced Espresso",
+    "description": "A drink to keep you awake.",
+    "price": 1.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486528.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 13,
+    "name": "Iced Coffee Latte",
+    "description": "A concoction of hard brewed espresso with sweetened milk and milk foam to top it up",
+    "price": 2.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486530.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 14,
+    "name": "Iced Mocha",
+    "description": "It combines cold brew with milk and chocolate flavoring (For ref only)",
+    "price": 2.30,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486536.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 15,
+    "name": "Iced Coffee Hub",
+    "description": "A perfect balance between coffee green tea and the sweetness of the milk",
+    "price": 2.75,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486531.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 16,
+    "name": "Iced Green Tea Latte",
+    "description": "A green tea latte is simply a latte made with green tea instead of espresso (For ref only)",
+    "price": 2.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486533.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 17,
+    "name": "Iced Fresh Milk",
+    "description": "Sweet and refreshing drink.",
+    "price": 1.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486548.jpg",
+    "category":"iced_coffee"
+  },
+  {
+    "id": 18,
+    "name": "Iced Honey Black Coffee",
+    "description": "Lightly sweet with milk honey flavors and no acidic tastes",
+    "price": 2.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486529.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 19,
+    "name": "Iced Cappuccino",
+    "description": "A drink to keep you awake.",
+    "price": 2.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486532.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 20,
+    "name": "Iced Vanilla Latte",
+    "description": "The combination of espresso with vanilla syrup",
+    "price": 2.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486534.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 21,
+    "name": "Iced Caramel Latte",
+    "description": "The combination of espresso with caramel syrup and steamed milk on top (For ref only)",
+    "price": 2.75,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486534.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 22,
+    "name": "Iced Chocolate",
+    "description": "It's supper accessible and so rich and refreshing",
+    "price": 2.00,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486547.jpg",
+    "category": "iced_coffee"
+  },
+  {
+    "id": 23,
+    "name": "Coffee Frappe",
+    "description": "A summer favorite drink that blend with milk, ice and coffee (For ref only)",
+    "price": 3.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486549.jpg",
+    "category": "iced_frappe"
+  },
+  {
+    "id": 24,
+    "name": "Mocha Frappe",
+    "description": "Blended mocha and milk to the smooth consistency (For ref only)",
+    "price": 3.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486550.jpg",
+    "category": "iced_frappe"
+  },
+  {
+    "id": 25,
+    "name": "Green Tea Frappe",
+    "description": "A summer favorite drink that blend with milk, ice and green tea (For ref only)",
+    "price": 3.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486551.jpg",
+    "category": "iced_frappe"
+  },
+  {
+    "id": 26,
+    "name": "Chocolate Frappe",
+    "description": "A foamy creamy delicious drink that combines with milk chocolate powder and ice blend in together.",
+    "price": 3.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486552.jpg",
+    "category": "iced_frappe"
+  },
+  {
+    "id": 27,
+    "name": "Strawberry Frappe",
+    "description": "A healthy and refreshing drinks made of fresh strawberry blended with milk",
+    "price": 3.50,
+    "imageUrl": "https://images.deliveryhero.io/image/fd-kh/Products/2486554.jpg",
+    "category": "iced_frappe"
+  }
+]
