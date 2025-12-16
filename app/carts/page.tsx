@@ -54,32 +54,7 @@ const CartPage = () => {
         const script = window.document.createElement("script");
         script.type = 'text/javascript';
         script.async = true;
-
-        // script.onload = () => {
-        //   console.log("✅ CyberSource checkout.js loaded");
-
-        //   // @ts-ignore
-        //   CyberSource.checkout({
-        //     captureContext: token,
-
-        //     onComplete: (result: any) => {
-        //       console.log("✅ PAYMENT SUCCESS:", result);
-
-        //       // result contains transient token / reference
-        //       const ref =
-        //         result?.details?.clientReferenceInformation?.code ??
-        //         "UNKNOWN";
-
-        //       window.location.href = `/result?reference=${ref}`;
-        //     },
-
-        //     onError: (err: any) => {
-        //       console.error("❌ PAYMENT ERROR:", err);
-        //       alert("Payment failed or cancelled");
-        //     }
-        //   });
-        // };
-
+        
         script.onload = async function() {
           console.log("JS Is Loaded");
           const showArgs = {
@@ -132,8 +107,8 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-44 mx-auto w-full md:w-5xl">
-      <div className="container mx-auto p-4">
+    <div className="min-h-screen flex flex-col pb-44">
+      <div className="container p-4 mx-auto w-full md:w-5xl">
         <Link href={'/'}>
           <Button className="rounded-sm" variant={"secondary"}>
             <ArrowLeft />
