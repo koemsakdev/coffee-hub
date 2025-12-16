@@ -9,68 +9,80 @@ const secretKey = process.env.CS_SECRET_KEY!; // base64
 export async function POST(req: Request) {
     const body = await req.json();
     const payload = JSON.stringify({
-        "targetOrigins": [
+        targetOrigins: [
             "https://coffee-hub-beta.vercel.app"
         ],
-        "clientVersion": "0.32",
-        "buttonType": "CHECKOUT_AND_CONTINUE",
-        "allowedCardNetworks": [
+        clientVersion: "0.32",
+        buttonType: "CHECKOUT_AND_CONTINUE",
+
+        allowedCardNetworks: [
             "VISA",
             "MASTERCARD"
         ],
-        "completeMandate": {
-            "type": "CAPTURE",
-            "decisionManager": false,
-            "consumerAuthentication": true
-        },
-        "allowedPaymentTypes": [
+
+        // 🔥 MUST include PANENTRY for card payment
+        allowedPaymentTypes: [
+            "PANENTRY",
             "CLICKTOPAY",
             "GOOGLEPAY"
         ],
-        "country": "US",
-        "locale": "en_US",
-        "captureMandate": {
-            "billingType": "FULL",
-            "requestEmail": true,
-            "requestPhone": true,
-            "requestShipping": true,
-            "shipToCountries": ["US", "GB"],
-            "showAcceptedNetworkIcons": true
-        }, "orderInformation": {
-            "amountDetails": {
-                "totalAmount": body.amount,
-                "currency": "USD"
+
+        completeMandate: {
+            type: "CAPTURE",
+            consumerAuthentication: true
+        },
+
+        country: "US",
+        locale: "en_US",
+
+        captureMandate: {
+            billingType: "FULL",
+            requestEmail: true,
+            requestPhone: true,
+            requestShipping: true,
+            shipToCountries: ["US", "GB"],
+            showAcceptedNetworkIcons: true
+        },
+
+        // 🔥 orderInformation MUST be inside data
+        data: {
+            orderInformation: {
+                amountDetails: {
+                    totalAmount: body.amount,
+                    currency: "USD"
+                },
+
+                billTo: {
+                    firstName: "Koemsak",
+                    lastName: "Mean",
+                    email: "koemsak.mean@gmail.com",
+                    phoneNumber: "1234567890",
+                    phoneType: "MOBILE",
+
+                    address1: "123 Cool Street",
+                    locality: "New York",
+                    administrativeArea: "NY",
+                    postalCode: "10172",
+                    country: "US"
+                },
+
+                shipTo: {
+                    firstName: "Alan",
+                    lastName: "Turing",
+                    address1: "456 Nice Avenue",
+                    locality: "Los Angeles",
+                    administrativeArea: "CA",
+                    postalCode: "90010",
+                    country: "US"
+                }
             },
-            "billTo": {
-                "address1": "123 Cool Street",
-                "administrativeArea": "NY",
-                "buildingNumber": "12",
-                "country": "US",
-                "district": "district",
-                "locality": "New York",
-                "postalCode": "10172",
-                "email": "koemsak.mean@gmail.com",
-                "firstName": "Koemsak",
-                "lastName": "Mean",
-                "middleName": "M",
-                "nameSuffix": "Jr",
-                "title": "Mr",
-                "phoneNumber": "1234567890",
-                "phoneType": "MOBILE"
-            },
-            "shipTo": {
-                "address1": "456 Nice Avenue",
-                "administrativeArea": "CA",
-                "buildingNumber": "409",
-                "country": "US",
-                "district": "Uptown",
-                "locality": "Los Angeles",
-                "postalCode": "90010",
-                "firstName": "Alan",
-                "lastName": "Turing"
+
+            clientReferenceInformation: {
+                code: "ORDER_" + Date.now()
             }
         }
     });
+
 
     // ---- Signature ----
     const date = new Date().toUTCString();
