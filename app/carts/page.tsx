@@ -46,7 +46,8 @@ const CartPage = () => {
         const token = resp.data.token;
         let clientLibrary = decodeJWT(token).ctx[0].data;
 
-        const libraryUrl = "https://apitest.cybersource.com/up/v1/assets/checkout.js"; // clientLibrary.clientLibrary
+        // const libraryUrl = "https://apitest.cybersource.com/up/v1/assets/checkout.js";
+        const libraryUrl = clientLibrary.clientLibrary;
         const integrity = clientLibrary.clientLibraryIntegrity;
 
         const head = window.document.getElementsByTagName('head')[0];
@@ -54,59 +55,59 @@ const CartPage = () => {
         script.type = 'text/javascript';
         script.async = true;
 
-        script.onload = () => {
-          console.log("✅ CyberSource checkout.js loaded");
+        // script.onload = () => {
+        //   console.log("✅ CyberSource checkout.js loaded");
 
-          // @ts-ignore
-          CyberSource.checkout({
-            captureContext: token,
+        //   // @ts-ignore
+        //   CyberSource.checkout({
+        //     captureContext: token,
 
-            onComplete: (result: any) => {
-              console.log("✅ PAYMENT SUCCESS:", result);
+        //     onComplete: (result: any) => {
+        //       console.log("✅ PAYMENT SUCCESS:", result);
 
-              // result contains transient token / reference
-              const ref =
-                result?.details?.clientReferenceInformation?.code ??
-                "UNKNOWN";
+        //       // result contains transient token / reference
+        //       const ref =
+        //         result?.details?.clientReferenceInformation?.code ??
+        //         "UNKNOWN";
 
-              window.location.href = `/result?reference=${ref}`;
-            },
+        //       window.location.href = `/result?reference=${ref}`;
+        //     },
 
-            onError: (err: any) => {
-              console.error("❌ PAYMENT ERROR:", err);
-              alert("Payment failed or cancelled");
+        //     onError: (err: any) => {
+        //       console.error("❌ PAYMENT ERROR:", err);
+        //       alert("Payment failed or cancelled");
+        //     }
+        //   });
+        // };
+
+        script.onload = async function() {
+          console.log("JS Is Loaded");
+          const showArgs = {
+            containers: {
+              paymentSelection: "#buttonPaymentListContainer",
+              paymentScreen: "#embeddedPaymentContainer"
             }
-          });
-        };
+          };
+          try {
+            // @ts-ignore
+            const accept = await window.Accept(token);
+            const up = await accept.unifiedPayments(false);
+            const tt = await up.show(showArgs);
+            const completeResponse = await up.complete(tt);
+            console.log("complete response: ", completeResponse);
+            let paymentResponse = decodeJWT(completeResponse);
+            console.log(paymentResponse);
 
-        // script.onload = async function() {
-        //   console.log("JS Is Loaded");
-        //   const showArgs = {
-        //     containers: {
-        //       paymentSelection: "#buttonPaymentListContainer",
-        //       paymentScreen: "#embeddedPaymentContainer"
-        //     }
-        //   };
-        //   try {
-        //     // @ts-ignore
-        //     const accept = await window.Accept(token);
-        //     const up = await accept.unifiedPayments(false);
-        //     const tt = await up.show(showArgs);
-        //     const completeResponse = await up.complete(tt);
-        //     console.log("complete response: ", completeResponse);
-        //     let paymentResponse = decodeJWT(completeResponse);
-        //     console.log(paymentResponse);
+            if (paymentResponse.status == 'AUTHORIZED') {
+              window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
+            } else {
+              alert("Payment declined, please try another card.")
+            }
 
-        //     if (paymentResponse.status == 'AUTHORIZED') {
-        //       window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
-        //     } else {
-        //       alert("Payment declined, please try another card.")
-        //     }
-
-        //   } catch (err: any) {
-        //     console.log(err);
-        //   }
-        // }
+          } catch (err: any) {
+            console.log(err);
+          }
+        }
 
         script.src = libraryUrl;
         if (integrity) {
