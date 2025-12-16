@@ -28,13 +28,22 @@ const CartPage = () => {
 
       const amount = totalAmount.toFixed(2);
       const currency = "USD";
-      const vendorId = `ORDER_${account}`;
-      const data = {
-        amount,
-        currency,
-        vendorId
+
+      const res = await fetch("/api/capture-context", {
+        method: "POST"
+      });
+      const data = await res.json();
+
+      const script = document.createElement("script");
+      script.src = "https://apitest.cybersource.com/up/v1/assets/checkout.js";
+      script.onload = () => {
+        // @ts-ignore
+        CyberSource.checkout({
+          captureContext: data.captureContext
+        });
       };
-      console.log(data);
+
+      document.body.appendChild(script);
     });
   }, [account, totalAmount]);
 
