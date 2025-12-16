@@ -6,8 +6,9 @@ import { OrderCard } from "@/components/order-card";
 import { useCartStore } from "@/stores/cartStore";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useState, useTransition } from "react";
-import { generateUniqueId } from "@/utils";
+import { decodeJWT, generateUniqueId } from "@/utils";
 import { ArrowLeft } from "lucide-react";
+import axios from "axios";
 
 
 const CartPage = () => {
@@ -25,25 +26,98 @@ const CartPage = () => {
 
   const handleCheckout = useCallback(() => {
     startPaymentTransition(async () => {
-
-      const amount = totalAmount.toFixed(2);
-      const currency = "USD";
-
-      const res = await fetch("/api/capture-context", {
-        method: "POST"
-      });
-      const data = await res.json();
-
-      const script = document.createElement("script");
-      script.src = "https://apitest.cybersource.com/up/v1/assets/checkout.js";
-      script.onload = () => {
-        // @ts-ignore
-        CyberSource.checkout({
-          captureContext: data.captureContext
+      try {
+        const amount = totalAmount.toFixed(2);
+        const payload = JSON.stringify({
+          amount: amount
         });
-      };
 
-      document.body.appendChild(script);
+        let resp = await axios.post(
+          '/api/capture-context',
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            }
+          }
+        );
+
+        const token = resp.data.token;
+        let clientLibrary = decodeJWT(token).ctx[0].data;
+
+        const libraryUrl = "https://apitest.cybersource.com/up/v1/assets/checkout.js"; // clientLibrary.clientLibrary
+        const integrity = clientLibrary.clientLibraryIntegrity;
+
+        const head = window.document.getElementsByTagName('head')[0];
+        const script = window.document.createElement("script");
+        script.type = 'text/javascript';
+        script.async = true;
+
+        script.onload = () => {
+          console.log("✅ CyberSource checkout.js loaded");
+
+          // @ts-ignore
+          CyberSource.checkout({
+            captureContext: token,
+
+            onComplete: (result: any) => {
+              console.log("✅ PAYMENT SUCCESS:", result);
+
+              // result contains transient token / reference
+              const ref =
+                result?.details?.clientReferenceInformation?.code ??
+                "UNKNOWN";
+
+              window.location.href = `/result?reference=${ref}`;
+            },
+
+            onError: (err: any) => {
+              console.error("❌ PAYMENT ERROR:", err);
+              alert("Payment failed or cancelled");
+            }
+          });
+        };
+
+        // script.onload = async function() {
+        //   console.log("JS Is Loaded");
+        //   const showArgs = {
+        //     containers: {
+        //       paymentSelection: "#buttonPaymentListContainer",
+        //       paymentScreen: "#embeddedPaymentContainer"
+        //     }
+        //   };
+        //   try {
+        //     // @ts-ignore
+        //     const accept = await window.Accept(token);
+        //     const up = await accept.unifiedPayments(false);
+        //     const tt = await up.show(showArgs);
+        //     const completeResponse = await up.complete(tt);
+        //     console.log("complete response: ", completeResponse);
+        //     let paymentResponse = decodeJWT(completeResponse);
+        //     console.log(paymentResponse);
+
+        //     if (paymentResponse.status == 'AUTHORIZED') {
+        //       window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
+        //     } else {
+        //       alert("Payment declined, please try another card.")
+        //     }
+
+        //   } catch (err: any) {
+        //     console.log(err);
+        //   }
+        // }
+
+        script.src = libraryUrl;
+        if (integrity) {
+          script.integrity = integrity;
+          script.crossOrigin = "anonymous";
+        }
+        head.appendChild(script);
+
+      } catch (error) {
+        console.log(error);
+      }
     });
   }, [account, totalAmount]);
 
@@ -114,8 +188,13 @@ const CartPage = () => {
               ))}
             </div>
           )}
+
+          <div id="buttonPaymentListContainer"></div>
+          <div id="embeddedPaymentContainer"></div>
         </div>
       </div>
+
+
 
       {/* 2. fixed bottom bar always at bottom */}
       {cartItems.length > 0 && (

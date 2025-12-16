@@ -1,3 +1,4 @@
+import axios from "axios";
 import crypto from "crypto";
 
 const host = "apitest.cybersource.com";
@@ -5,80 +6,68 @@ const merchantId = process.env.CS_MERCHANT_ID!;
 const keyId = process.env.CS_KEY_ID!;
 const secretKey = process.env.CS_SECRET_KEY!; // base64
 
-export async function POST() {
+export async function POST(req: Request) {
+    const body = await req.json();
     const payload = JSON.stringify({
-        targetOrigins: ["https://test.com", "http://localhost:3000"],
-        clientVersion: "0.31",
-        buttonType: "CHECKOUT_AND_CONTINUE",
-
-        allowedCardNetworks: ["VISA", "MASTERCARD"],
-        allowedPaymentTypes: [
-            "PANENTRY",
+        "targetOrigins": [
+            "https://coffee-hub-beta.vercel.app"
+        ],
+        "clientVersion": "0.32",
+        "buttonType": "CHECKOUT_AND_CONTINUE",
+        "allowedCardNetworks": [
+            "VISA",
+            "MASTERCARD"
+        ],
+        "completeMandate": {
+            "type": "CAPTURE",
+            "decisionManager": false,
+            "consumerAuthentication": true
+        },
+        "allowedPaymentTypes": [
             "CLICKTOPAY",
-            "APPLEPAY",
             "GOOGLEPAY"
         ],
-
-        completeMandate: {
-            type: "CAPTURE",
-            decisionManager: true,
-            consumerAuthentication: true,
-            tms: {
-                tokenCreate: true,
-                tokenTypes: [
-                    "customer",
-                    "paymentInstrument",
-                    "instrumentIdentifier",
-                    "shippingAddress"
-                ]
-            }
-        },
-
-        country: "US",
-        locale: "en_US",
-
-        captureMandate: {
-            billingType: "FULL",
-            requestEmail: true,
-            requestPhone: true,
-            requestShipping: true,
-            shipToCountries: ["US", "GB"],
-            showAcceptedNetworkIcons: true
-        },
-
-        data: {
-            orderInformation: {
-                billTo: {
-                    country: "US",
-                    firstName: "NEW",
-                    lastName: "Test",
-                    phoneNumber: "1234567890",
-                    address1: "901 Metro Center Blvd",
-                    address2: "Desk M3-5573",
-                    buildingNumber: "150",
-                    postalCode: "94404",
-                    locality: "Foster City",
-                    administrativeArea: "CA",
-                    email: "test@example.com"
-                },
-                shipTo: {
-                    country: "US",
-                    firstName: "NEW",
-                    lastName: "Test",
-                    address1: "901 Metro Center Blvd",
-                    address2: "Desk M3-5573",
-                    buildingNumber: "150",
-                    postalCode: "94404",
-                    locality: "Foster City",
-                    administrativeArea: "CA"
-                },
-                amountDetails: {
-                    totalAmount: "13.00",
-                    currency: "USD"
-                }
+        "country": "US",
+        "locale": "en_US",
+        "captureMandate": {
+            "billingType": "FULL",
+            "requestEmail": true,
+            "requestPhone": true,
+            "requestShipping": true,
+            "shipToCountries": ["US", "GB"],
+            "showAcceptedNetworkIcons": true
+        }, "orderInformation": {
+            "amountDetails": {
+                "totalAmount": body.amount,
+                "currency": "USD"
             },
-            clientReferenceInformation: {
-                code: "TAGX001"
+            "billTo": {
+                "address1": "123 Cool Street",
+                "administrativeArea": "NY",
+                "buildingNumber": "12",
+                "country": "US",
+                "district": "district",
+                "locality": "New York",
+                "postalCode": "10172",
+                "email": "foo@bar.com",
+                "firstName": "Viktor",
+                "lastName": "Vaughn",
+                "middleName": "F",
+                "nameSuffix": "Jr",
+                "title": "Mr",
+                "phoneNumber": "1234567890",
+                "phoneType": "mobile"
+            },
+            "shipTo": {
+                "address1": "456 Nice Avenue",
+                "administrativeArea": "CA",
+                "buildingNumber": "409",
+                "country": "US",
+                "district": "Uptown",
+                "locality": "Los Angeles",
+                "postalCode": "90010",
+                "firstName": "Alan",
+                "lastName": "Turing"
             }
         }
     });
@@ -102,25 +91,38 @@ export async function POST() {
         .digest("base64");
 
     const authorization =
-        `Signature keyid="${keyId}",` +
+        `keyid="${keyId}",` +
         `algorithm="HmacSHA256",` +
         `headers="host v-c-date request-target digest v-c-merchant-id",` +
         `signature="${signature}"`;
 
-    const res = await fetch(`https://${host}/up/v1/capture-contexts`, {
-        method: "POST",
-        headers: {
-            host,
-            Accept: "application/json",
-            "Content-Type": "application/json",
-            "v-c-merchant-id": merchantId,
-            "v-c-date": date,
-            Digest: digest,
-            Authorization: authorization
-        },
-        body: payload
-    });
-
-    const data = await res.json();
-    return Response.json(data);
+    try {
+        let cyberResp = await axios.post(
+            `https://${host}/up/v1/capture-contexts`,
+            payload,
+            {
+                headers: {
+                    Host: host,
+                    "v-c-merchant-id": merchantId,
+                    "v-c-date": date,
+                    Digest: digest,
+                    Signature: authorization,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+        console.log(cyberResp)
+        console.log(cyberResp.data.captureContext)
+        return Response.json(
+            {
+                status: cyberResp.status,
+                token: cyberResp.data
+            }
+        );
+    } catch (error: any) {
+        return Response.json(
+            { error: error.message ?? "Internal error" },
+            { status: 500 }
+        );
+    }
 }

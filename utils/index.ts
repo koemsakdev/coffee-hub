@@ -3,4 +3,16 @@ const generateUniqueId = (prefix: string): string => {
     return `${prefix}-${randomPart}`;
 };
 
-export { generateUniqueId };
+const decodeJWT = (token: string) => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) throw new Error("Invalid JWT token format");
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+
+    return payload;
+  } catch {
+    return null
+  }
+}
+
+export { generateUniqueId, decodeJWT };
