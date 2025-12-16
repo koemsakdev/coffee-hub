@@ -56,7 +56,7 @@ export async function POST(req: Request) {
                 "nameSuffix": "Jr",
                 "title": "Mr",
                 "phoneNumber": "1234567890",
-                "phoneType": "mobile"
+                "phoneType": "MOBILE"
             },
             "shipTo": {
                 "address1": "456 Nice Avenue",
