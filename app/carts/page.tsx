@@ -7,7 +7,7 @@ import { useCartStore } from "@/stores/cartStore";
 import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { decodeJWT, generateUniqueId } from "@/utils";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2Icon } from "lucide-react";
 import axios from "axios";
 
 
@@ -24,7 +24,82 @@ const CartPage = () => {
 
   const [isPaymentPending, startPaymentTransition] = useTransition();
 
-  const handleCheckout = useCallback(() => {
+  // const handleCheckout = useCallback(() => {
+  //   startPaymentTransition(async () => {
+  //     try {
+  //       const amount = totalAmount.toFixed(2);
+  //       const payload = JSON.stringify({
+  //         amount: amount
+  //       });
+
+  //       let resp = await axios.post(
+  //         '/api/capture-context',
+  //         payload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             "Accept": "application/json"
+  //           }
+  //         }
+  //       );
+
+  //       const token = resp.data.token;
+  //       let clientLibrary = decodeJWT(token).ctx[0].data;
+
+  //       const libraryUrl = clientLibrary.clientLibrary;
+  //       const integrity = clientLibrary.clientLibraryIntegrity;
+
+  //       const head = window.document.getElementsByTagName('head')[0];
+  //       const script = window.document.createElement("script");
+  //       script.type = 'text/javascript';
+  //       script.async = true;
+
+  //       script.onload = async function () {
+  //         console.log("JS Is Loaded");
+  //         const showArgs = {
+  //           containers: {
+  //             paymentSelection: "#buttonPaymentListContainer",
+  //             paymentScreen: "#embeddedPaymentContainer"
+  //           }
+  //         };
+  //         try {
+  //           // @ts-ignore
+  //           const accept = await window.Accept(token);
+  //           const up = await accept.unifiedPayments(false);
+  //           const tt = await up.show(showArgs);
+  //           const completeResponse = await up.complete(tt);
+  //           console.log("complete response: ", completeResponse);
+  //           let paymentResponse = decodeJWT(completeResponse);
+  //           console.log(paymentResponse);
+
+  //           if (paymentResponse.status == 'AUTHORIZED') {
+  //             window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
+  //           } else {
+  //             alert("Payment declined, please try another card.")
+  //           }
+
+  //         } catch (err: any) {
+  //           console.log(err);
+  //         }
+  //       }
+
+  //       script.src = libraryUrl;
+  //       if (integrity) {
+  //         script.integrity = integrity;
+  //         script.crossOrigin = "anonymous";
+  //       }
+  //       head.appendChild(script);
+
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   });
+  // }, [account, totalAmount]);
+
+  useEffect(() => {
+    const newAccount = generateUniqueId("coffee");
+    setAccount(newAccount);
+
     startPaymentTransition(async () => {
       try {
         const amount = totalAmount.toFixed(2);
@@ -46,7 +121,6 @@ const CartPage = () => {
         const token = resp.data.token;
         let clientLibrary = decodeJWT(token).ctx[0].data;
 
-        // const libraryUrl = "https://apitest.cybersource.com/up/v1/assets/checkout.js";
         const libraryUrl = clientLibrary.clientLibrary;
         const integrity = clientLibrary.clientLibraryIntegrity;
 
@@ -54,8 +128,8 @@ const CartPage = () => {
         const script = window.document.createElement("script");
         script.type = 'text/javascript';
         script.async = true;
-        
-        script.onload = async function() {
+
+        script.onload = async function () {
           console.log("JS Is Loaded");
           const showArgs = {
             containers: {
@@ -95,11 +169,7 @@ const CartPage = () => {
         console.log(error);
       }
     });
-  }, [account, totalAmount]);
 
-  useEffect(() => {
-    const newAccount = generateUniqueId("coffee");
-    setAccount(newAccount);
   }, [cartItems, clearCart, totalAmount]);
 
   if (!hydrated) {
@@ -164,9 +234,6 @@ const CartPage = () => {
               ))}
             </div>
           )}
-
-          <div id="buttonPaymentListContainer"></div>
-          <div id="embeddedPaymentContainer"></div>
         </div>
       </div>
 
@@ -209,14 +276,18 @@ const CartPage = () => {
             </div>
           </div>
 
-          <Button
-            disabled={isPaymentPending}
-            onClick={handleCheckout}
-            variant={"secondary"}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-xs shadow-md mb-4"
-          >
-            {isPaymentPending ? "Processing..." : "CHECKOUT"}
-          </Button>
+
+          {isPaymentPending ? (
+            <Button className="bg-indigo-500 w-full" disabled>
+               <Loader2Icon className="mr-3 size-5 animate-spin" />
+              Processing…
+            </Button>
+          ) : (
+            <div className="w-full mb-4">
+              <div id="buttonPaymentListContainer"></div>
+              <div id="embeddedPaymentContainer"></div>
+            </div>
+          )}
         </div>
       )}
     </div>

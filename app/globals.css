@@ -120,6 +120,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
     font-family: "Sora", "Siemreap", sans-serif !important;
@@ -135,4 +136,8 @@ input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+input {
+  @apply hover:bg-transparent text-blue-500 font-bold border border-blue-300 rounded-md pl-2 pr-7 py-1 text-sm w-full outline-0 focus:shadow-none focus-visible:ring-0 focus-visible:border focus-visible:border-blue-500 transition-colors duration-200;
 }

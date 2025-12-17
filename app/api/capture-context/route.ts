@@ -16,7 +16,11 @@ export async function POST(req: Request) {
         "buttonType": "CHECKOUT_AND_CONTINUE",
         "allowedCardNetworks": [
             "VISA",
-            "MASTERCARD"
+            "MASTERCARD",
+            "AMEX",
+            "DISCOVER",
+            "JCB",
+            "DINERSCLUB"
         ],
         "completeMandate": {
             "type": "CAPTURE",
