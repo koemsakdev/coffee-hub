@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const payload = JSON.stringify({
         "targetOrigins": [
-            "https://stageonline.wingmoney.com"
+            "https://coffee-hub-beta.vercel.app"
         ],
         "clientVersion": "0.19",
         "allowedCardNetworks": [
