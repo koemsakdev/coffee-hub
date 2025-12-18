@@ -2,18 +2,16 @@ import axios from "axios";
 
 
 const host = process.env.CS_HOST;
+const url = "https://stageonline.wingmoney.com/vsmaster-unified-payment/api/v1/card/payment/capture-contexts";
 export async function POST(req: Request) {
-    const url = 'https://stageonline.wingmoney.com/vsmaster-unified-payment/api/v1/card/payment/capture-contexts';
     try {
         const body = await req.json();
 
-        console.log(body.amount)
-
         const payload = {
             "targetOrigins": [
-                "https://localhost:3000"
+                "https://stageonline.wingmoney.com"
             ],
-            "clientVersion": "0.32",
+            "clientVersion": "0.19",
             "allowedCardNetworks": [
                 "VISA",
                 "MASTERCARD",
@@ -56,20 +54,40 @@ export async function POST(req: Request) {
                     "middleName": "M",
                     "nameSuffix": "Jr",
                     "title": "Mr",
-                    "phoneNumber": "011646694",
-                    "phoneType": "MOBILE"
+                    "phoneNumber": "011646694"
                 }
             }
         };
 
+        // const cyberResp = await axios.post(url, payload, {
+        //     headers: { 'Content-Type': 'application/json' }
+        // });
+        // console.log("Cyber response: ", cyberResp);
+        // // return Response.json({cyberResp});
 
-        const cyberResp = await axios.post(url, JSON.stringify(payload), { // payload is a JS Object
-            headers: { 'Content-Type': 'application/json' }
-        });
-        console.log("Cyber response: ", cyberResp);
-        // return Response.json({cyberResp});
-        return Response.json({ status: 200, message: "Success" });
+        // let cyberResp = await fetch(url,
+        //     {
+        //         method: "POST",
+        //         headers: {
+        //             Host: host,
+        //             "Content-Type": "application/json"
+        //         },
+        //         body: payload
+        //     }
+        // );
+        // console.log(cyberResp);
+
+        // const data = await cyberResp.json();
+        // console.log(data);
+
+        return Response.json(
+            {
+                status: 200,
+                message: "Successfully"
+            }
+        );
     } catch (error: any) {
+        console.log(error);
         return Response.json({ error: error.message }, { status: 400 });
     }
 }

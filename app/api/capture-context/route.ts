@@ -10,36 +10,30 @@ export async function POST(req: Request) {
     const body = await req.json();
     const payload = JSON.stringify({
         "targetOrigins": [
-            "https://coffee-hub-beta.vercel.app"
+            "https://stageonline.wingmoney.com"
         ],
-        "clientVersion": "0.32",
-        "buttonType": "CHECKOUT_AND_CONTINUE",
+        "clientVersion": "0.19",
         "allowedCardNetworks": [
             "VISA",
             "MASTERCARD",
-            "AMEX",
-            "DISCOVER",
-            "JCB",
-            "DINERSCLUB"
+            "AMEX"
         ],
-        "completeMandate": {
-            "type": "CAPTURE",
-            "decisionManager": false,
-            "consumerAuthentication": true
-        },
         "allowedPaymentTypes": [
-            "CLICKTOPAY",
-            "GOOGLEPAY"
+            "PANENTRY"
         ],
-        "country": "US",
+        "country": "KH",
         "locale": "en_US",
+        "buttonType": "PAY",
         "captureMandate": {
-            "billingType": "FULL",
-            "requestEmail": true,
-            "requestPhone": true,
-            "requestShipping": true,
-            "shipToCountries": ["US", "GB"],
-            "showAcceptedNetworkIcons": true
+            "billingType": "NONE",
+            "requestEmail": false,
+            "requestPhone": false,
+            "requestShipping": false,
+            "shipToCountries": [
+                "KH"
+            ],
+            "showAcceptedNetworkIcons": false,
+            "showConfirmationStep": false
         },
         "orderInformation": {
             "amountDetails": {
@@ -47,32 +41,19 @@ export async function POST(req: Request) {
                 "currency": "USD"
             },
             "billTo": {
-                "address1": "123 Cool Street",
-                "administrativeArea": "NY",
-                "buildingNumber": "12",
-                "country": "US",
-                "district": "district",
-                "locality": "New York",
+                "address1": "No 22, St Lum, Tagnov Kandal, Nirouth, Chba Ampove",
+                "administrativeArea": "PP",
+                "buildingNumber": "22",
+                "country": "KH",
+                "district": "Niroth",
+                "locality": "Phnom Penh",
                 "postalCode": "10172",
-                "email": "koemsak.mean@gmail.com",
-                "firstName": "Koemsak",
-                "lastName": "Mean",
+                "email": "neth.phan@wingbank.com.kh",
+                "firstName": "Neth",
+                "lastName": "Phan",
                 "middleName": "M",
-                "nameSuffix": "Jr",
                 "title": "Mr",
-                "phoneNumber": "1234567890",
-                "phoneType": "MOBILE"
-            },
-            "shipTo": {
-                "address1": "456 Nice Avenue",
-                "administrativeArea": "CA",
-                "buildingNumber": "409",
-                "country": "US",
-                "district": "Uptown",
-                "locality": "Los Angeles",
-                "postalCode": "90010",
-                "firstName": "Alan",
-                "lastName": "Turing"
+                "phoneNumber": "85577773783"
             }
         }
     });
@@ -102,10 +83,24 @@ export async function POST(req: Request) {
         `signature="${signature}"`;
 
     try {
-        let cyberResp = await axios.post(
-            `https://${host}/up/v1/capture-contexts`,
-            payload,
+        // let cyberResp = await axios.post(
+        //     `https://${host}/up/v1/capture-contexts`,
+        //     payload,
+        //     {
+        //         headers: {
+        //             Host: host,
+        //             "v-c-merchant-id": merchantId,
+        //             "v-c-date": date,
+        //             Digest: digest,
+        //             Signature: authorization,
+        //             "Content-Type": "application/json"
+        //         }
+        //     }
+        // );
+
+        let cyberResp = await fetch(`https://${host}/up/v1/capture-contexts`,
             {
+                method: "POST",
                 headers: {
                     Host: host,
                     "v-c-merchant-id": merchantId,
@@ -113,13 +108,22 @@ export async function POST(req: Request) {
                     Digest: digest,
                     Signature: authorization,
                     "Content-Type": "application/json"
-                }
+                },
+                body: payload
             }
         );
+
+        if (!cyberResp.ok) {
+            const err = await cyberResp.text();
+            throw new Error(err);
+        }
+
+        const data = await cyberResp.text();
+
         return Response.json(
             {
                 status: cyberResp.status,
-                token: cyberResp.data
+                token: data
             }
         );
     } catch (error: any) {
@@ -128,4 +132,11 @@ export async function POST(req: Request) {
             { status: 500 }
         );
     }
+}
+
+export async function GET() {
+    return Response.json({
+        code: 200,
+        message: "Succcess"
+    }, { status: 200 });
 }

@@ -243,7 +243,7 @@ const CartPage = () => {
       {cartItems.length > 0 && (
         <div
           className={cn(
-            "bg-white rounded-t-2xl backdrop-blur-sm px-6 py-2 md:px-8 md:py-4 fixed bottom-0 right-0 w-full z-50",
+            "bg-white rounded-t-2xl backdrop-blur-sm px-6 py-2 md:px-8 md:py-4 bottom-0 right-0 w-full z-50",
             "shadow-[inset_0_1px_20px_rgba(0,0,0,0.1)]"
           )}
         >
