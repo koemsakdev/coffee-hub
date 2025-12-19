@@ -131,27 +131,49 @@ const CartPage = () => {
 
         script.onload = async function () {
           console.log("JS Is Loaded");
-          const showArgs = {
-            containers: {
-              paymentSelection: "#buttonPaymentListContainer",
-              paymentScreen: "#embeddedPaymentContainer"
-            }
-          };
+          // const showArgs = {
+          //   containers: {
+          //     paymentSelection: "#buttonPaymentListContainer",
+          //     paymentScreen: "#embeddedPaymentContainer"
+          //   }
+          // };
           try {
             // @ts-ignore
             const accept = await window.Accept(token);
             const up = await accept.unifiedPayments(false);
-            const tt = await up.show(showArgs);
-            const completeResponse = await up.complete(tt);
-            console.log("complete response: ", completeResponse);
-            let paymentResponse = decodeJWT(completeResponse);
-            console.log(paymentResponse);
 
-            if (paymentResponse.status == 'AUTHORIZED') {
-              window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
-            } else {
-              alert("Payment declined, please try another card.")
+            const trigger = up.createTrigger("PANENTRY", {
+              containers: {
+                paymentScreen: "#paymentScreenContainer"
+              }
+            });
+
+            const payBtn = document.querySelector<HTMLButtonElement>("#payWithCardBtn");
+
+            if (!payBtn) {
+              throw new Error("Pay button not found in DOM");
             }
+
+            payBtn.addEventListener("click", async () => {
+              try {
+                const transientToken = await trigger.show();
+                console.log("Transient Token:", transientToken);
+              } catch (err) {
+                console.error("Payment error:", err);
+              }
+            });
+
+            // const tt = await up.show(showArgs);
+            // const completeResponse = await up.complete(tt);
+            // console.log("complete response: ", completeResponse);
+            // let paymentResponse = decodeJWT(completeResponse);
+            // console.log(paymentResponse);
+
+            // if (paymentResponse.status == 'AUTHORIZED') {
+            //   window.location.assign(`http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`);
+            // } else {
+            //   alert("Payment declined, please try another card.")
+            // }
 
           } catch (err: any) {
             console.log(err);
@@ -279,13 +301,15 @@ const CartPage = () => {
 
           {isPaymentPending ? (
             <Button className="bg-indigo-500 w-full" disabled>
-               <Loader2Icon className="mr-3 size-5 animate-spin" />
+              <Loader2Icon className="mr-3 size-5 animate-spin" />
               Processing…
             </Button>
           ) : (
             <div className="w-full mb-4">
-              <div id="buttonPaymentListContainer"></div>
-              <div id="embeddedPaymentContainer"></div>
+              <Button className="bg-indigo-500 w-full" id="payWithCardBtn">Pay Now</Button>
+              <div id="paymentScreenContainer"></div>
+              {/* <div id="buttonPaymentListContainer"></div>
+              <div id="embeddedPaymentContainer"></div> */}
             </div>
           )}
         </div>

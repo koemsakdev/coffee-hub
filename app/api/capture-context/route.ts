@@ -12,7 +12,7 @@ export async function POST(req: Request) {
         "targetOrigins": [
             "https://coffee-hub-beta.vercel.app"
         ],
-        "clientVersion": "0.19",
+        "clientVersion": "0.32",
         "allowedCardNetworks": [
             "VISA",
             "MASTERCARD",
