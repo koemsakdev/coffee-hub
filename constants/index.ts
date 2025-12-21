@@ -48,6 +48,7 @@ export interface ProductProps {
   price: string;
   category: string;
   imageUrl: string;
+  rating: number;
 }
 
 export interface PaymentSuccessData {

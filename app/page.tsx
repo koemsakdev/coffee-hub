@@ -1,56 +1,26 @@
 "use client";
-
-import { useEffect, useState, useMemo } from "react";
-import { debounce } from "next/dist/server/utils";
-import AppBar from "@/components/app-bar";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import Footer from "@/components/footer";
+// import  { useState  } from "react";
+import NavigationBar from "@/components/navbar";
+import { ProductCardView } from "@/components/product-card";
+import ProductCardSkeleton from "@/components/product-skeleton";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, List, Loader, X } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { ProductCardGrid } from "@/components/product-card-grid";
-import { ProductCardList } from "@/components/product-card-list";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductProps } from "@/constants";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
-
-
-function Home() {
-  const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("grid");
-  const [allProducts, setAllProducts] = useState<ProductProps[]>([]);
-  const [userName, setUserName] = useState<string>("Guest");
+export default function App() {
+  const [filter, setFilter] = useState("all");
+  const [products, setProducts] = useState<ProductProps[]>([]);
   const [loading, setLoading] = useState(true);
+  const categories = ["all", "iced_coffee", "iced_frappe", "hot_coffee"];
 
-  const handleChangeMode = (mode: string) => {
-    setViewMode(mode);
-    localStorage.setItem("viewMode", mode);
-  };
+  const filteredProducts = products.filter(
+    (p) => filter === "all" || p.category === filter
+  );
 
-
-  const handleSearchChange = debounce((value: string) => {
-    setSearch(value);
-    console.log(process.env.NEXT_PUBLIC_PROFILE_LEVEL);
-  }, 100);
-
-  const products = useMemo(() => {
-    if (!search.trim()) {
-      return allProducts;
-    }
-    return allProducts.filter((product) =>
-      product.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [search, allProducts]);
-
-  const fetchProducts = async () => {
+  const getProducts = async () => {
     setLoading(true);
     try {
       const response = await fetch("/coffees.json");
@@ -58,7 +28,7 @@ function Home() {
         throw new Error("Network response was not ok");
       }
       const data = await response.json();
-      setAllProducts(data); // Cache the products
+      setProducts(data);
     } catch (error) {
       console.error("Failed to fetch products:", error);
     } finally {
@@ -66,128 +36,77 @@ function Home() {
     }
   };
 
-  const handleClearSearch = () => {
-    setSearch("");
-  };
-
   useEffect(() => {
-    const savedViewMode = localStorage.getItem("viewMode");
-    if (savedViewMode) {
-      setViewMode(savedViewMode);
-    }
-
-    fetchProducts();
+    getProducts();
   }, []);
 
   return (
-    <>
-      <div className="container mx-auto px-6 md:px-5 py-10 mb-20 w-full md:w-5xl">
-        <div className="flex justify-between items-center mb-5">
-          <h1 className="text-lg md:text-2xl font-bold text-sky-900">
-            សូមស្វាគមន៍មកាន់, <strong>Coffee Hub</strong>
-          </h1>
-        </div>
-
-        <div className="grid w-full items-center gap-3">
-          <Label htmlFor="search">Search Coffee</Label>
-          <div className="flex items-center justify-between gap-2">
-            <div className="relative">
-              <Input
-                onChange={(e) => handleSearchChange(e.target.value)}
-                value={search}
-                type="text"
-                id="search"
-                placeholder="Search..."
-                className="rounded-sm shadow-none w-60 md:w-75 outline-0 focus-visible:shadow-none focus:shadow-none ring-0 focus:ring-0"
-                autoComplete="off"
-              />
+    <div className="flex flex-col min-h-screen">
+      <NavigationBar />
+      <main className="w-full max-w-7xl mx-auto px-6 py-8">
+        <div className="animate-fadeIn">
+          <div className="relative h-100 md:h-112.5 bg-[#2C1810] rounded-2xl overflow-hidden mb-8 flex items-center shadow-lg">
+            <div className="absolute inset-0 bg-linear-to-r from-[#2C1810] via-[#2C1810]/80 to-transparent z-10" />
+            <Image
+              src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&q=80&w=2070"
+              className="absolute inset-0 w-full h-full object-cover"
+              width={2070}
+              height={1334}
+              alt="Coffee background"
+            />
+            <div className="z-20 max-w-xl pl-6 md:pl-12">
+              <span className="inline-block px-4 py-3 bg-emerald-900/25 text-emerald-400 rounded-full text-xs font-bold uppercase tracking-widest mb-4">
+                Crafted with Passion
+              </span>
+              <h2 className="text-3xl md:text-6xl font-bold mb-6 text-white leading-tight">
+                Better Coffee, <br />
+                <span className="text-emerald-600">Better Days.</span>
+              </h2>
+              <p className="text-stone-300 text-lg mb-8 leading-relaxed">
+                Experience the artisan taste of Coffee Hub. Hand-picked beans
+                roasted to perfection and delivered fresh to your cup.
+              </p>
               <Button
-                onClick={handleClearSearch}
-                variant={"ghost"}
-                size={"icon"}
-                className={cn(
-                  "absolute right-0 top-0 bottom-0 mr-2 hover:bg-transparent",
-                  search === "" ? "hidden" : "block"
-                )}
-                aria-label="Clear search"
-              >
-                <X />
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                onClick={() => handleChangeMode("grid")}
                 variant={"secondary"}
-                size={"icon"}
-                className={cn(
-                  "rounded-sm shadow-none",
-                  viewMode === "grid" ? "bg-teal-200 hover:bg-teal-300" : ""
-                )}
+                size={"lg"}
+                className="bg-emerald-600 hover:bg-emerald-700 px-12 py-6 text-white rounded-md font-bold transition-all transform hover:scale-105 shadow-lg"
               >
-                <LayoutGrid className="size-4 md:size-5 text-teal-700 hover:text-teal-800" />
-              </Button>
-              <Button
-                onClick={() => handleChangeMode("list")}
-                variant={"secondary"}
-                size={"icon"}
-                className={cn(
-                  "rounded-sm shadow-none",
-                  viewMode === "list" ? "bg-teal-200 hover:bg-teal-300" : ""
-                )}
-              >
-                <List className="size-4 md:size-5 text-teal-700 hover:text-teal-800" />
+                Explore Menu
               </Button>
             </div>
           </div>
         </div>
 
-        <Separator className="my-6" />
+        <div className="flex w-full flex-col gap-6">
+          <Tabs defaultValue={filter} onValueChange={setFilter}>
+            <TabsList className="flex gap-2 bg-transparent">
+              {categories.map((cat) => (
+                <TabsTrigger
+                  key={cat}
+                  value={cat}
+                  className="capitalize px-2 md:px-6 py-4 md:py-6 rounded-md transition-all duration-300 text-xs md:text-sm font-semibold tracking-wide bg-slate-100 text-slate-600 hover:bg-slate-200 data-[state=active]:bg-emerald-600 data-[state=active]:hover:bg-emerald-700 data-[state=active]:text-white data-[state=active]:shadow-md"
+                >
+                  {cat.replace("_", " ")}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value={filter} className="mt-5">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+                {loading &&
+                  Array.from({ length: 8 }).map((_, index) => (
+                    <ProductCardSkeleton key={index} />
+                  ))}
 
-        <div className="mt-6">
-          <h2 className="text-lg md:text-xl font-semibold text-teal-900">
-            The best coffee to make you feel fresh during the work everywhere.
-          </h2>
-          <div
-            className={cn(
-              "grid grid-cols-2 gap-4 mt-4",
-              viewMode === "grid"
-                ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
-                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2"
-            )}
-          >
-            {products.map((product: ProductProps) => {
-              return viewMode === "grid" ? (
-                <ProductCardGrid key={product.id} product={product} />
-              ) : (
-                <ProductCardList key={product.id} product={product} />
-              );
-            })}
-
-            {!loading && products.length === 0 && (
-              <div className="col-span-full text-center text-gray-500">
-                No products found.
+                {filteredProducts.map((p) => (
+                  <ProductCardView key={p.id} product={p} />
+                ))}
               </div>
-            )}
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
+      </main>
 
-        <Dialog open={loading}>
-          <DialogContent
-            className="flex items-center justify-center bg-transparent border-0 outline-0 shadow-none"
-            showCloseButton={false}
-          >
-            <DialogHeader>
-              <DialogTitle className="text-center" />
-              <DialogDescription className="text-center" />
-            </DialogHeader>
-
-            <Loader className="animate-spin size-12 text-white font-bold" />
-          </DialogContent>
-        </Dialog>
-      </div>
-      <AppBar isActive={"home"} />
-    </>
+      <Footer />
+    </div>
   );
 }
-
-export default Home;

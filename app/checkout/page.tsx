@@ -1,438 +1,390 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 
-import React, { useState } from 'react';
-import { Truck, CreditCard, Wallet, Check, Loader2, Icon as LucideIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import Footer from "@/components/footer";
+import NavigationBar from "@/components/navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { useCartStore } from "@/stores/cartStore";
+import { decodeJWT } from "@/utils";
+import axios from "axios";
+import { CheckCircle2, ChevronLeft } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-// =================================================================================
-// 1. INTERFACES
-// =================================================================================
+const Checkout = () => {
+  const router = useRouter();
+  const cartItems = useCartStore((state) => state.getCartItems());
+  const totalAmount = useCartStore((state) => state.getTotalAmount());
 
-interface ShippingDetails {
-    fullName: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    email: string;
-    state: string;
-}
+  const [firstName, setFirstName] = useState("Koemsak");
+  const [lastName, setLastName] = useState("Mean");
+  const [email, setEmail] = useState("koemsak.mean@gmail.com");
+  const [address, setAddress] = useState(
+    "# 36B, Street 371, Group 5, Orchide Village, Sangkat Ou Baek K'am, Khan Sen Sok, Phnom Penh."
+  );
 
-interface InputProps {
-    label: string;
-    name: keyof ShippingDetails | string;
-    value: string;
-    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    type?: string;
-    required?: boolean;
-    readOnly?: boolean;
-    className?: string;
-}
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-interface ButtonProps {
-    children: React.ReactNode;
-    disabled?: boolean;
-    type?: 'button' | 'submit' | 'reset';
-    onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-    loading?: boolean;
-    className?: string;
-    variant?: 'default' | 'outline' | 'ghost'; // Shadcn variants
-}
+  const [hydrated, setHydrated] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState("card");
 
-interface PaymentOptionProps {
-    id: string;
-    label: string;
-    icon: React.ElementType;
-    description: string;
-}
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
-// =================================================================================
-// 2. SHADCN-STYLE COMPONENTS
-// =================================================================================
+  const methods = [
+    {
+      id: "card",
+      title: "Debit/Credit Card",
+      description: "Pay securely with your Visa, Mastercard, or Amex.",
+      icon: "/credit-card.png",
+      tag: "Secure",
+    },
+    {
+      id: "cod",
+      title: "Cash on Delivery",
+      description: "Pay with cash when your order is delivered to your door.",
+      icon: "/cash-on-delivery.png",
+      tag: "Manual",
+    },
+  ];
 
-/**
- * Shadcn-style Button component
- */
-const Button: React.FC<ButtonProps> = ({
-    children,
-    disabled,
-    type = 'button',
-    onClick,
-    loading = false,
-    className = '',
-    variant = 'default',
-}) => {
-    let baseClasses = 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2';
+  useEffect(() => {
+    if (!hydrated || selectedMethod !== "card") return;
+    const setUpUnifiedCheckout = async () => {
+      try {
+        setLoading(true);
+        setError("");
+        const payload = JSON.stringify({
+          amount: totalAmount.toFixed(2),
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          address: address,
+        });
 
-    if (variant === 'default') {
-        // Primary/Default style (indigo)
-        baseClasses += ' bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-md';
-    } else if (variant === 'outline') {
-        baseClasses += ' border border-input bg-background hover:bg-accent hover:text-accent-foreground';
-    } else if (variant === 'ghost') {
-        baseClasses += ' hover:bg-accent hover:text-accent-foreground';
-    }
+        // const resp = await axios.post("/api/capture-context", payload, {
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //     Accept: "application/json",
+        //   },
+        // });
 
-    return (
-        <button
-            type={type}
-            disabled={disabled || loading}
-            onClick={onClick}
-            className={`${baseClasses} ${className}`}
-        >
-            {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-            {children}
-        </button>
-    );
-};
+        const resp = await fetch("/api/capture-context", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: payload
+        });
 
-/**
- * Shadcn-style Input component combined with Label
- */
-// const Input: React.FC<InputProps> = ({ 
-//   label, 
-//   name, 
-//   value, 
-//   type = 'text', 
-//   readOnly = false, 
-//   onChange, 
-//   required = false, 
-//   className = '' 
-// }) => (
-//   <div className="grid w-full items-center gap-1.5 mb-4">
-//     <label htmlFor={name} className="text-sm font-medium leading-none text-gray-700">
-//       {label} {required && <span className="text-red-500">*</span>}
-//     </label>
-//     <input
-//       type={type}
-//       name={name}
-//       id={name}
-//       value={value}
-//       onChange={onChange}
-//       readOnly={readOnly}
-//       required={required}
-//       // Shadcn input classes: border-input, bg-background, focus-visible:ring-ring
-//       className={`flex h-10 w-full rounded-md border px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition duration-150
-//           ${readOnly ? 'bg-gray-100 border-gray-200 cursor-default disabled' : 'bg-white border-gray-300'} 
-//           ${className}`}
-//     />
-//   </div>
-// );
-
-/**
- * Shadcn-style RadioGroup Item for Payment Options
- */
-const PaymentOption: React.FC<PaymentOptionProps & {
-    paymentMethod: string;
-    setPaymentMethod: (method: string) => void;
-}> = ({ id, label, icon: Icon, description, paymentMethod, setPaymentMethod }) => (
-    <label
-        htmlFor={id}
-        className={`relative flex cursor-pointer items-center justify-between rounded-lg border p-4 shadow-sm transition duration-150 ease-in-out hover:bg-gray-50
-      ${paymentMethod === id
-                ? 'border-indigo-600 ring-2 ring-indigo-600 bg-indigo-50/50'
-                : 'border-gray-200'
-            }`
+        if (!resp.ok) {
+          const errorText = await resp.text();
+          throw new Error(`Request failed: ${resp.status} - ${errorText}`);
         }
-    >
-        <div className="flex items-center">
-            {/* Custom Radio Circle to mimic shadcn RadioItem */}
-            <div
-                className={`h-4 w-4 rounded-full border border-gray-400 mr-4 flex items-center justify-center transition ${paymentMethod === id ? 'border-indigo-600 bg-white' : 'bg-white'}`}
-                role="radio"
-                aria-checked={paymentMethod === id}
-            >
-                <span className={`h-2 w-2 rounded-full bg-indigo-600 transition duration-150 ${paymentMethod === id ? 'opacity-100' : 'opacity-0'}`}></span>
-            </div>
 
-            <input
-                type="radio"
-                name="paymentMethod"
-                id={id}
-                value={id}
-                checked={paymentMethod === id}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="sr-only"
-                aria-labelledby={`${id}-label`}
-                aria-describedby={`${id}-description`}
-            />
-            <div className="flex flex-1 items-center">
-                <Icon className="h-5 w-5 text-gray-600 mr-3" />
-                <div className="flex flex-col">
-                    <span id={`${id}-label`} className="block text-sm font-medium text-gray-900">
-                        {label}
-                    </span>
-                    <span id={`${id}-description`} className="mt-1 flex items-center text-xs text-gray-500">
-                        {description}
-                    </span>
-                </div>
-            </div>
+        const data = await resp.json();
+
+        console.log(data);
+        const token = data.token;
+
+        const clientLibrary = decodeJWT(token).ctx[0].data;
+        const libraryUrl = clientLibrary.clientLibrary;
+        const integrity = clientLibrary.clientLibraryIntegrity;
+
+        const head = window.document.getElementsByTagName("head")[0];
+        const script = window.document.createElement("script");
+        script.type = "text/javascript";
+        script.async = true;
+
+        script.onload = async function () {
+          console.log("JS Is Loaded");
+          const showArgs = {
+            layout: "sidebar",
+            containers: {
+              paymentSelection: "#buttonPaymentListContainer",
+              paymentScreen: "#embeddedPaymentContainer",
+            },
+          };
+
+          try {
+            // @ts-expect-error
+            const accept = await window.Accept(token);
+            const up = await accept.unifiedPayments(false);
+            const tt = await up.show(showArgs);
+            const completeResponse = await up.complete(tt);
+            console.log("complete response: ", completeResponse);
+            const paymentResponse = decodeJWT(completeResponse);
+            console.log("Payment response: ", paymentResponse);
+
+            if (paymentResponse.status === "AUTHORIZED") {
+              window.location.assign(
+                `http://${window.location.host}/result?reference=${paymentResponse.details.clientReferenceInformation.code}`
+              );
+            } else {
+              setError("Payment declined. Please try another card.");
+            }
+          } catch (err: any) {
+            console.log(err);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        script.src = libraryUrl;
+        if (integrity) {
+          script.integrity = integrity;
+          script.crossOrigin = "anonymous";
+        }
+        head.appendChild(script);
+      } catch (error) {
+        console.log(error);
+        setError("Unable to initialize payment.");
+        setLoading(false);
+      }
+    };
+    setUpUnifiedCheckout();
+  }, [
+    address,
+    email,
+    firstName,
+    hydrated,
+    lastName,
+    selectedMethod,
+    totalAmount,
+  ]);
+
+  if (!hydrated) return null;
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <NavigationBar />
+      <main className="w-full max-w-7xl mx-auto px-6 py-8">
+        <div className="flex items-center gap-4 mb-12">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-all"
+          >
+            <ChevronLeft size={20} />
+            <span>Back</span>
+          </button>
         </div>
-    </label>
-);
+        <h2 className="text-4xl font-bold text-stone-800">Final Step</h2>
+        <Separator className="my-8" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          <div className="space-y-12">
+            <section>
+              <h3 className="text-xl font-bold mb-6 text-stone-800 flex items-center gap-3 underline decoration-emerald-600 decoration-2 underline-offset-8">
+                Delivery Address
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <Input
+                  type="text"
+                  placeholder="First Name"
+                  className="px-3 py-5 bg-white border border-stone-200 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-600 outline-none"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  autoFocus
+                />
+                <Input
+                  type="text"
+                  placeholder="Last Name"
+                  className="px-3 py-5 bg-white border border-stone-200 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-600 outline-none"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+                <Input
+                  type="email"
+                  placeholder="Email Address"
+                  className="col-span-2 px-3 py-5 bg-white border border-stone-200 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-600 outline-none"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Apartment, suite, unit, building, floor, etc."
+                  className="col-span-2 px-3 py-5 bg-white border border-stone-200 rounded-md focus-visible:ring-2 focus-visible:ring-emerald-600 outline-none"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+            </section>
 
-// =================================================================================
-// 3. MAIN APP COMPONENT
-// =================================================================================
+            <section>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-stone-800 flex items-center gap-3">
+                  Payment Method
+                </h3>
+                <p className="text-slate-500 mt-1 text-sm">
+                  Choose how you&apos;d like to pay for your order.
+                </p>
+              </div>
 
-const App: React.FC = () => {
-    const initialShippingDetails: ShippingDetails = {
-        fullName: 'John Smith',
-        address: '123 Main Street',
-        city: 'San Francisco',
-        postalCode: '94107',
-        email: 'john.smith@example.com',
-        state: 'California',
-    };
+              <div className="space-y-4">
+                {methods.map((method) => {
+                  const isSelected = selectedMethod === method.id;
 
-    const [shippingDetails, setShippingDetails] = useState<ShippingDetails>(initialShippingDetails);
-    const [paymentMethod, setPaymentMethod] = useState<string>('credit_card');
-    const [isProcessing, setIsProcessing] = useState<boolean>(false);
-    const [view, setView] = useState<'checkout' | 'success'>('checkout');
-
-    // Mock order details
-    const subtotal: number = 149.99;
-    const shippingCost: number = 10.00;
-    const taxRate: number = 0.08;
-    const tax: number = subtotal * taxRate;
-    const total: number = subtotal + shippingCost + tax;
-
-    // Typed change event handler for mutable shipping inputs
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setShippingDetails(prev => ({ ...prev, [name]: value } as ShippingDetails));
-    };
-
-    // Typed form submission handler
-    const handlePaymentSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!shippingDetails.fullName || !shippingDetails.address || !shippingDetails.email) {
-            console.error('Validation Error: Please fill out all required shipping fields.');
-            return;
-        }
-
-        setIsProcessing(true);
-        // Simulate API call delay
-        setTimeout(() => {
-            setIsProcessing(false);
-            setView('success');
-            console.log("Payment Processed for:", total.toFixed(2), "via", paymentMethod);
-        }, 2000);
-    };
-
-    if (view === 'success') {
-        return (
-            <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-                <div className="max-w-md w-full p-8 bg-white shadow-2xl rounded-xl text-center border-t-4 border-indigo-500">
-                    <div className="flex justify-center mb-6">
-                        <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center">
-                            <Check className="h-8 w-8 text-green-600" />
-                        </div>
-                    </div>
-                    <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Order Confirmed!</h1>
-                    <p className="text-gray-600 mb-6">
-                        Thank you for your purchase. Your order has been placed successfully and a confirmation email has been sent to {shippingDetails.email}.
-                    </p>
-                    <div className="space-y-3 bg-gray-50 p-4 rounded-lg text-left text-sm">
-                        <div className="flex justify-between font-medium">
-                            <span>Order Total:</span>
-                            <span>${total.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-700">
-                            <span>Ship to:</span>
-                            <span>{shippingDetails.fullName}</span>
-                        </div>
-                    </div>
-                    <Button
-                        onClick={() => setView('checkout')}
-                        className="mt-6 w-full"
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedMethod(method.id)}
+                      className={`w-full relative flex items-start gap-4 p-4 rounded-md border-2 transition-all duration-200 text-left outline-none focus:ring-1 focus:ring-emerald-500 outline-0 ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-400/25 hover:bg-emerald-400/30 shadow-sm"
+                          : "border-slate-100 hover:border-slate-300 bg-white"
+                      }`}
                     >
-                        Continue Shopping
-                    </Button>
-                </div>
-            </div>
-        );
-    }
+                      <div className="w-14 h-14 flex items-center justify-center">
+                        <Image
+                          src={method.icon}
+                          alt={method.title}
+                          width={38}
+                          height={38}
+                        />
+                      </div>
 
-    return (
-        <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-10">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-8 text-center sm:text-left">Checkout</h1>
-                <form onSubmit={handlePaymentSubmit}>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-10">
-
-                        {/* Left Column: Shipping and Payment */}
-                        <div className="lg:col-span-2 space-y-8">
-
-                            {/* Shipping Information Section */}
-                            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-100">
-                                <div className="flex items-center space-x-3 mb-6 border-b pb-4">
-                                    <Truck className="h-6 w-6 text-indigo-500" />
-                                    <h2 className="text-2xl font-semibold text-gray-900">Shipping Information</h2>
-                                </div>
-                                <div className='flex flex-col gap-4'>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                                        <div className='flex flex-col gap-2'>
-                                            <Label>Full Name</Label>
-                                            <Input
-                                                name="fullName"
-                                                value={shippingDetails.fullName}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div className='flex flex-col gap-2'>
-                                            <Label>Email</Label>
-                                            <Input
-                                                name="email"
-                                                type="email"
-                                                value={shippingDetails.email}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className='flex flex-col gap-2'>
-                                        <Label>Address</Label>
-                                        <Input
-                                            name="address"
-                                            value={shippingDetails.address}
-                                            onChange={handleInputChange}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6">
-                                        <div className="flex flex-col gap-2">
-                                            <Label>City</Label>
-                                            <Input
-                                                name="city"
-                                                value={shippingDetails.city}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="flex flex-col gap-2">
-                                            <Label>State</Label>
-                                            <Input
-                                                name="state"
-                                                value={shippingDetails.state}
-                                                onChange={handleInputChange}
-                                            />
-                                        </div>
-
-                                        <div className="flex flex-col gap-2">
-                                            <Label>Postal Code</Label>
-                                            <Input
-                                                name="postalCode"
-                                                value={shippingDetails.postalCode}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Payment Method Section */}
-                            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-100">
-                                <div className="flex items-center space-x-3 mb-6 border-b pb-4">
-                                    <CreditCard className="h-6 w-6 text-indigo-500" />
-                                    <h2 className="text-2xl font-semibold text-gray-900">Payment Method</h2>
-                                </div>
-
-                                {/* Payment Options using shadcn-style Radio Items */}
-                                <div className="space-y-4">
-                                    <PaymentOption
-                                        id="credit_card"
-                                        label="Credit or Debit Card"
-                                        icon={CreditCard}
-                                        description="Visa, MasterCard, American Express"
-                                        paymentMethod={paymentMethod}
-                                        setPaymentMethod={setPaymentMethod}
-                                    />
-                                    <PaymentOption
-                                        id="paypal"
-                                        label="Pay with PayPal"
-                                        icon={Wallet}
-                                        description="Pay easily and securely"
-                                        paymentMethod={paymentMethod}
-                                        setPaymentMethod={setPaymentMethod}
-                                    />
-                                </div>
-
-                                {/* Mock Card Input if Credit Card is selected */}
-                                {paymentMethod === 'credit_card' && (
-                                    <div className="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                                        <div >
-
-                                        </div>
-                                        <Input name="cardNumber" value="4111 **** **** 1234" readOnly />
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div className='flex flex-col gap-2'>
-                                                <Label>Card Name</Label>
-                                                <Input name="cardName" value="J. Smith" readOnly />
-                                            </div>
-                                            <div className="flex flex-col gap-2">
-                                                <Label>Expiry</Label>
-                                                <Input name="expiry" value="12/26" readOnly />
-                                            </div>
-                                            <div className='flex flex-col gap-2'>
-                                                <Label>CVC</Label>
-                                                <Input name="cvc" value="123" type="password" readOnly />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className={`font-medium ${
+                              isSelected && "text-emerald-600"
+                            }`}
+                          >
+                            {method.title}
+                          </span>
+                          {isSelected && (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 animate-in zoom-in duration-300" />
+                          )}
                         </div>
+                        <p
+                          className={cn(
+                            "text-sm",
+                            isSelected && "text-emerald-700"
+                          )}
+                        >
+                          {method.description}
+                        </p>
+                      </div>
 
-                        {/* Right Column: Order Summary */}
-                        <div className="lg:col-span-1 mt-8 lg:mt-0">
-                            <div className="sticky top-10 bg-white p-6 sm:p-8 rounded-xl shadow-2xl border border-gray-100">
-                                <h2 className="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Order Summary</h2>
+                      {isSelected && (
+                        <span className="absolute -top-2 -right-2 bg-[#d2883d] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                          {method.tag}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
 
-                                {/* Price Breakdown */}
-                                <div className="space-y-4 text-gray-700">
-                                    <div className="flex justify-between">
-                                        <span>Subtotal</span>
-                                        <span>${subtotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>Shipping</span>
-                                        <span>${shippingCost.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between border-b pb-4">
-                                        <span>Tax ({(taxRate * 100).toFixed(0)}%)</span>
-                                        <span>${tax.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xl font-bold text-gray-900 pt-2">
-                                        <span>Order Total</span>
-                                        <span>${total.toFixed(2)}</span>
-                                    </div>
-                                </div>
+                {selectedMethod === "card" ? (
+                  <div className="space-y-4">
+                    {/* Loading Skeleton */}
+                    {loading && (
+                      <div className="space-y-3">
+                        <div className="h-12 rounded-full bg-white/10 animate-pulse" />
+                        <div className="h-['320px'] rounded-xl bg-white/10 animate-pulse" />
+                      </div>
+                    )}
 
-                                <div className="mt-8">
-                                    {/* Using the new Button component */}
-                                    <Button
-                                        type="submit"
-                                        loading={isProcessing}
-                                        disabled={isProcessing}
-                                        className="w-full h-12 text-base"
-                                    >
-                                        Pay Now ${total.toFixed(2)}
-                                    </Button>
-                                </div>
+                    {/* Error */}
+                    {error && (
+                      <div className="p-3 rounded-md bg-red-500/10 text-red-400 text-sm">
+                        {error}
+                      </div>
+                    )}
 
-                                <p className="mt-4 text-xs text-center text-gray-500">
-                                    By clicking "Pay Now", you agree to our Terms & Conditions.
-                                </p>
-                            </div>
-                        </div>
+                    {/* Unified Checkout Buttons */}
+                    <div
+                      id="buttonPaymentListContainer"
+                      className="min-h-['56px']"
+                    />
+
+                    {/* Embedded Payment UI */}
+                    <div
+                      id="embeddedPaymentContainer"
+                      className="min-h-['420px'] rounded-xl border border-white/10 overflow-hidden bg-white"
+                    />
+                  </div>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="w-full bg-emerald-600 text-white py-6 rounded-full text-base md:text-lg hover:bg-emerald-700 transition-all transform active:scale-95"
+                    disabled={loading}
+                  >
+                    Confirm Order
+                  </Button>
+                )}
+              </div>
+            </section>
+          </div>
+          <div className="bg-emerald-900/95 backdrop-blur-3xl p-4 md:p-6 rounded-lg text-emerald-400 h-fit sticky top-24 shadow-sm">
+            <h3 className="font-bold text-2xl mb-8">Summary</h3>
+            <div className="max-h-['300px'] overflow-y-auto mb-8 space-y-5 pr-4 custom-scrollbar">
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center group"
+                >
+                  <div className="flex gap-4 items-center">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/10 p-1">
+                      <Image
+                        src={item.imageUrl}
+                        className="w-full h-full object-cover rounded-lg"
+                        width={48}
+                        height={48}
+                        priority
+                        alt={item.name}
+                      />
                     </div>
-                </form>
+                    <div>
+                      <p className="font-bold text-stone-200 group-hover:text-white transition-colors">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-stone-400">
+                        {item.quantity} units
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-black text-[#D4A373]">
+                    ${(parseFloat(item.price) * item.quantity).toFixed(2)}
+                  </span>
+                </div>
+              ))}
             </div>
+
+            <div className="border-t border-white/10 pt-8 space-y-4 mb-10">
+              <div className="flex justify-between text-stone-400 font-medium">
+                <span>Subtotal</span>
+                <span>${totalAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-stone-400 font-medium">
+                <span>Delivery</span>
+                <span>$0.50</span>
+              </div>
+              <div className="flex justify-between font-black text-3xl pt-4">
+                <span>Total</span>
+                <span className="text-[#D4A373]">
+                  ${(totalAmount + 0.5).toFixed(2)}
+                </span>
+              </div>
+            </div>
+            {/* <Button
+              variant={"secondary"}
+              className="w-full bg-emerald-600 text-white py-6 rounded-full text-base md:text-lg hover:bg-emerald-700 transition-all transform active:scale-95"
+            >
+              Confirm Order
+            </Button> */}
+          </div>
         </div>
-    );
+      </main>
+      <Footer />
+    </div>
+  );
 };
 
-export default App;
+export default Checkout;
