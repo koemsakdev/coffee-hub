@@ -120,6 +120,7 @@ const UnifiedCheckoutPage = () => {
                                 }
                             } catch (err) {
                                 console.error("Payment error:", err);
+                                alert(err.message || "Payment error");
                                 checkoutObserver?.disconnect();
                                 router.back();
                             }
