@@ -15,4 +15,12 @@ const decodeJWT = (token: string) => {
   }
 }
 
-export { generateUniqueId, decodeJWT };
+function formatDateTime(isoString: string | number | Date) {
+    return new Date(isoString).toLocaleString("en-US", {
+        dateStyle: "medium",
+        timeStyle: "short",
+    });
+}
+
+
+export { generateUniqueId, decodeJWT, formatDateTime };

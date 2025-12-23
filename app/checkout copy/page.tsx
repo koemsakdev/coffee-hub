@@ -3,18 +3,14 @@
 "use client";
 
 import Footer from "@/components/footer";
-import JsonEditor from "@/components/json-editor";
 import NavigationBar from "@/components/navbar";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { decodeJWT } from "@/utils";
-import axios from "axios";
 import { CheckCircle2, ChevronLeft } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -63,13 +59,6 @@ const Checkout = () => {
           email: email,
           address: address,
         });
-
-        // const resp = await axios.post("/api/capture-context", payload, {
-        //   headers: {
-        //     "Content-Type": "application/json",
-        //     Accept: "application/json",
-        //   },
-        // });
 
         const resp = await fetch("/api/capture-context", {
           method: "POST",
@@ -135,7 +124,7 @@ const Checkout = () => {
         setLoading(false);
       }
     };
-    // setUpUnifiedCheckout();
+    setUpUnifiedCheckout();
   }, [
     address,
     email,
@@ -165,7 +154,7 @@ const Checkout = () => {
         <Separator className="my-8" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div className="space-y-8">
-            {/* <section>
+            <section>
               <h3 className="text-xl font-bold mb-6 text-stone-800 flex items-center gap-3 underline decoration-emerald-600 decoration-2 underline-offset-8">
                 Delivery Address
               </h3>
@@ -198,17 +187,9 @@ const Checkout = () => {
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
-            </section> */}
-            <Accordion type="single" collapsible>
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="bg-slate-100 px-4">View Capture Context</AccordionTrigger>
-                <AccordionContent>
-                  <JsonEditor />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            </section>
 
-            {/* <section>
+            <section>
               <div className="mb-6">
                 <h3 className="text-xl font-bold text-stone-800 flex items-center gap-3">
                   Payment Method
@@ -289,7 +270,7 @@ const Checkout = () => {
                   </Button>
                 )}
               </div>
-            </section> */}
+            </section>
           </div>
           <div className="bg-emerald-900/95 backdrop-blur-3xl p-4 md:p-6 rounded-lg text-emerald-400 h-fit sticky top-24 shadow-sm">
             <h3 className="font-bold text-2xl mb-8">Summary</h3>
