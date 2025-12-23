@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Separator } from "@/components/ui/separator";
@@ -28,9 +27,12 @@ const UnifiedCheckoutPage = () => {
 
   useEffect(() => {
     const setUpUnifiedCheckout = async () => {
-      if (!payload) {
-        return;
-      }
+      if (!payload) return;
+
+      let checkoutObserver: MutationObserver | null = null;
+      let tokenReceived = false;
+      let isCompleting = false;
+
       try {
         const resp = await fetch("/api/v1/payment/checkout", {
           method: "POST",
@@ -41,112 +43,99 @@ const UnifiedCheckoutPage = () => {
         });
 
         if (!resp.ok) {
-          const errorText = await resp.text();
-          throw new Error(`Request failed: ${resp.status} - ${errorText}`);
+          throw new Error(await resp.text());
         }
 
         const data = await resp.json();
+        if (data.status !== 200) return;
 
-        if (data.status == 200) {
-          const token = data.token;
+        const { token, client_library, integrity } = data;
 
-          const libraryUrl = data.client_library;
-          const integrity = data.integrity;
-
-          const head = window.document.getElementsByTagName("head")[0];
-          const script = window.document.createElement("script");
-          script.type = "text/javascript";
-          script.async = true;
-
-          script.onload = async function () {
-            console.log("JS Is Loaded");
-            try {
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-expect-error
-              const accept = await window.Accept(token);
-              const up = await accept.unifiedPayments(false);
-
-              const trigger = up.createTrigger("PANENTRY", {
-                containers: {
-                  paymentScreen: "#paymentScreenContainer",
-                },
-              });
-
-              let checkoutObserver: MutationObserver | null = null;
-
-              let isCompleting = false;
-              try {
-                const container = document.querySelector(
-                  "#paymentScreenContainer"
-                ) as HTMLElement | null;
-
-                if (!container) {
-                  console.error("paymentScreenContainer not found");
-                  return;
-                }
-
-                checkoutObserver = new MutationObserver(() => {
-                  const iframe = container.querySelector("iframe");
-
-                  if (!iframe) {
-                    router.back();
-                    console.log("Unified Checkout back clicked");
-                    checkoutObserver?.disconnect();
-                  }
-                });
-
-                checkoutObserver.observe(container, {
-                  childList: true,
-                  subtree: true,
-                });
-
-                if (isCompleting) return;
-                isCompleting = true;
-
-                const tt = await trigger.show();
-                if (!tt) {
-                  checkoutObserver.disconnect();
-                  router.back();
-                  return;
-                }
-                checkoutObserver.disconnect();
-                const completeResponse = await up.complete(tt);
-
-                const paymentResponse = decodeJWT(completeResponse);
-                
-                if (paymentResponse.status === "AUTHORIZED") {
-                  localStorage.removeItem("payload");
-                  localStorage.removeItem("capture-context");
-                  clearCard();
-                  router.push(`/success?token=${completeResponse}`);
-                } else {
-                  router.push(`/fails?token=${completeResponse}`);
-                }
-              } catch (err: any) {
-                console.error("Payment error:", err);
-                alert(err.message);
-                checkoutObserver?.disconnect();
-                router.back();
-              } finally {
-                isCompleting = false;
-                checkoutObserver?.disconnect();
-              }
-            } catch (err: any) {
-              console.log(err);
-            }
-          };
-
-          script.src = libraryUrl;
-          if (integrity) {
-            script.integrity = integrity;
-            script.crossOrigin = "anonymous";
-          }
-          head.appendChild(script);
+        // ---- Load Accept.js ----
+        const script = document.createElement("script");
+        script.src = client_library;
+        script.async = true;
+        if (integrity) {
+          script.integrity = integrity;
+          script.crossOrigin = "anonymous";
         }
-      } catch (error) {
-        console.log(error);
+
+        script.onload = async () => {
+          try {
+            // @ts-expect-error CyberSource global
+            const accept = await window.Accept(token);
+            const up = await accept.unifiedPayments(false);
+
+            const trigger = up.createTrigger("PANENTRY", {
+              containers: {
+                paymentScreen: "#paymentScreenContainer",
+              },
+            });
+
+            const container = document.querySelector(
+              "#paymentScreenContainer"
+            ) as HTMLElement | null;
+
+            if (!container) {
+              console.error("paymentScreenContainer not found");
+              return;
+            }
+
+            // ---- Observe iframe disappearance ----
+            checkoutObserver = new MutationObserver(() => {
+              const iframe = container.querySelector("iframe");
+
+              // iframe removed BEFORE token → user cancelled
+              if (!iframe && !tokenReceived && !isCompleting) {
+                checkoutObserver?.disconnect();
+                router.replace("/");
+              }
+            });
+
+            checkoutObserver.observe(container, {
+              childList: true,
+              subtree: true,
+            });
+
+            // ---- Show Unified Checkout ----
+            const tt = await trigger.show();
+
+            if (!tt) {
+              checkoutObserver.disconnect();
+              router.replace("/");
+              return;
+            }
+
+            tokenReceived = true;
+            isCompleting = true;
+            checkoutObserver.disconnect();
+
+            // ---- Complete payment (ONLY ONCE) ----
+            const completeResponse = await up.complete(tt);
+            const paymentResponse = decodeJWT(completeResponse);
+
+            localStorage.removeItem("payload");
+            localStorage.removeItem("capture-context");
+            clearCard();
+
+            if (paymentResponse.status === "AUTHORIZED") {
+              router.replace(`/success?token=${completeResponse}`);
+            } else {
+              router.replace(`/fails?token=${completeResponse}`);
+            }
+          } catch (err) {
+            console.error("Payment error:", err);
+            checkoutObserver?.disconnect();
+            router.replace("/");
+          }
+        };
+
+        document.head.appendChild(script);
+      } catch (err) {
+        console.error(err);
       }
     };
+
     setUpUnifiedCheckout();
   }, [clearCard, payload, router]);
 
