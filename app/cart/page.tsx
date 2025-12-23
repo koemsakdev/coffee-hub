@@ -77,14 +77,14 @@ const CartPage = () => {
                   </div>
                   <div className="flex justify-between text-stone-500">
                     <span>Standard Delivery</span>
-                    <span className="font-semibold text-stone-800">$0.50</span>
+                    <span className="font-semibold text-stone-800">$0.00</span>
                   </div>
                   <div className="pt-4 border-t border-stone-100 flex justify-between">
                     <span className="font-bold text-stone-800 text-xl">
                       Grand Total
                     </span>
                     <span className="font-black text-[#2C1810] text-2xl">
-                      ${(totalAmount + 0.5).toFixed(2)}
+                      ${totalAmount.toFixed(2)}
                     </span>
                   </div>
                 </div>

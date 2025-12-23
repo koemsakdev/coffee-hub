@@ -20,66 +20,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-
-const INITIAL_JSON = {
-  "targetOrigins": [
-    "https://stageonline.wingmoney.com"
-  ],
-  "clientVersion": "0.32",
-  "allowedCardNetworks": [
-    "VISA",
-    "MASTERCARD",
-    "AMEX"
-  ],
-  "allowedPaymentTypes": [
-    "PANENTRY"
-  ],
-  "country": "KH",
-  "locale": "en_US",
-  "captureMandate": {
-    "billingType": "NONE",
-    "requestEmail": false,
-    "requestPhone": false,
-    "requestShipping": false,
-    "shipToCountries": [
-      "KH"
-    ],
-    "showAcceptedNetworkIcons": true
-  },
-  "completeMandate": {
-    "type": "AUTH",
-    "decisionManager": true,
-    "consumerAuthentication": true
-  },
-  "orderInformation": {
-    "amountDetails": {
-      "totalAmount": "10.00",
-      "currency": "USD"
-    },
-    "billTo": {
-      "address1": "No 22, St Lum, Tagnov Kandal, Nirouth, Chba Ampove",
-      "administrativeArea": "KH-12",
-      "buildingNumber": "22",
-      "country": "KH",
-      "district": "Niroth",
-      "locality": "Phnom Penh",
-      "postalCode": "10172",
-      "email": "neth.phan@wingbank.com.kh",
-      "firstName": "Neth",
-      "lastName": "Phan",
-      "middleName": "M",
-      "title": "Mr",
-      "phoneNumber": "85577773783"
-    }
-  }
-};
-
 const Checkout = () => {
   const router = useRouter();
   const cartItems = useCartStore((state) => state.getCartItems());
   const totalAmount = useCartStore((state) => state.getTotalAmount());
-
-  const [initJson, setInitJson] = useState(INITIAL_JSON);
 
   const [firstName, setFirstName] = useState("Koemsak");
   const [lastName, setLastName] = useState("Mean");
@@ -97,56 +41,15 @@ const Checkout = () => {
     setHydrated(true);
   }, []);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("capture-context");
-
-    // 1 If user already has a saved config → use it and STOP
-    if (stored) {
-      try {
-        setInitJson(JSON.parse(stored));
-        return;
-      } catch { }
+  const methods = [
+    {
+      id: "card",
+      title: "Debit/Credit Card",
+      description: "Pay securely with your Visa, Mastercard.",
+      icon: "/credit-card.png",
+      tag: "Secure",
     }
-
-    // 2 Otherwise derive initial JSON from inputs
-    setInitJson(prev => ({
-      ...prev,
-      orderInformation: {
-        ...prev.orderInformation,
-        amountDetails: {
-          ...prev.orderInformation.amountDetails,
-          totalAmount: Number(totalAmount).toFixed(2),
-        },
-        billTo: {
-          ...prev.orderInformation.billTo,
-          address1: address,
-          firstName,
-          lastName,
-          email,
-        },
-      },
-    }));
-  }, [firstName, lastName, totalAmount, email, address]);
-
-
-  const handleSave = (value: object) => {
-    localStorage.setItem("capture-context", JSON.stringify(value, null, 4));
-    setInitJson(JSON.parse(JSON.stringify(value, null, 4)));
-
-    alert("Data save. Another transaction if you don't reset the data, the old data you have change still use. \nExample: Amount from store is $2.00, but you change the amount to 10 based on JSON. So if you don't reset, the amount still 10.")
-  };
-
-  const handleReset = () => {
-    localStorage.removeItem("capture-context");
-    setInitJson(INITIAL_JSON);
-    window.location.reload();
-  };
-
-  const goNext = () => {
-    localStorage.setItem("payload", JSON.stringify(initJson));
-    router.push("/unified-checkout");
-  };
-
+  ];
 
   useEffect(() => {
     if (!hydrated || selectedMethod !== "card") return;
@@ -168,7 +71,7 @@ const Checkout = () => {
         //   },
         // });
 
-        const resp = await fetch("/api/v1/payment/checkout", {
+        const resp = await fetch("/api/capture-context", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -183,53 +86,50 @@ const Checkout = () => {
 
         const data = await resp.json();
 
-        if (data.status == 200) {
-          console.log(data);
+        console.log(data);
+        const token = data.token;
+
+        const clientLibrary = decodeJWT(token).ctx[0].data;
+        const libraryUrl = clientLibrary.clientLibrary;
+        const integrity = clientLibrary.clientLibraryIntegrity;
+
+        const head = window.document.getElementsByTagName("head")[0];
+        const script = window.document.createElement("script");
+        script.type = "text/javascript";
+        script.async = true;
+
+        script.onload = async function () {
+          console.log("JS Is Loaded");
+          const showArgs = {
+            layout: "sidebar",
+            containers: {
+              paymentSelection: "#buttonPaymentListContainer",
+              paymentScreen: "#embeddedPaymentContainer",
+            },
+          };
+
+          try {
+            // @ts-expect-error
+            const accept = await window.Accept(token);
+            const up = await accept.unifiedPayments(false);
+            const tt = await up.show(showArgs);
+            const completeResponse = await up.complete(tt);
+            console.log("complete response: ", completeResponse);
+            const paymentResponse = decodeJWT(completeResponse);
+            console.log("Payment response: ", paymentResponse);
+          } catch (err: any) {
+            console.log(err);
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        script.src = libraryUrl;
+        if (integrity) {
+          script.integrity = integrity;
+          script.crossOrigin = "anonymous";
         }
-
-        // const token = data.token;
-
-        // const clientLibrary = decodeJWT(token).ctx[0].data;
-        // const libraryUrl = clientLibrary.clientLibrary;
-        // const integrity = clientLibrary.clientLibraryIntegrity;
-
-        // const head = window.document.getElementsByTagName("head")[0];
-        // const script = window.document.createElement("script");
-        // script.type = "text/javascript";
-        // script.async = true;
-
-        // script.onload = async function () {
-        //   console.log("JS Is Loaded");
-        //   const showArgs = {
-        //     layout: "sidebar",
-        //     containers: {
-        //       paymentSelection: "#buttonPaymentListContainer",
-        //       paymentScreen: "#embeddedPaymentContainer",
-        //     },
-        //   };
-
-        //   try {
-        //     // @ts-expect-error
-        //     const accept = await window.Accept(token);
-        //     const up = await accept.unifiedPayments(false);
-        //     const tt = await up.show(showArgs);
-        //     const completeResponse = await up.complete(tt);
-        //     console.log("complete response: ", completeResponse);
-        //     const paymentResponse = decodeJWT(completeResponse);
-        //     console.log("Payment response: ", paymentResponse);
-        //   } catch (err: any) {
-        //     console.log(err);
-        //   } finally {
-        //     setLoading(false);
-        //   }
-        // };
-
-        // script.src = libraryUrl;
-        // if (integrity) {
-        //   script.integrity = integrity;
-        //   script.crossOrigin = "anonymous";
-        // }
-        // head.appendChild(script);
+        head.appendChild(script);
       } catch (error) {
         console.log(error);
         setLoading(false);
@@ -245,7 +145,6 @@ const Checkout = () => {
     selectedMethod,
     totalAmount,
   ]);
-
 
   if (!hydrated) return null;
 
@@ -266,7 +165,7 @@ const Checkout = () => {
         <Separator className="my-8" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           <div className="space-y-8">
-            <section>
+            {/* <section>
               <h3 className="text-xl font-bold mb-6 text-stone-800 flex items-center gap-3 underline decoration-emerald-600 decoration-2 underline-offset-8">
                 Delivery Address
               </h3>
@@ -299,19 +198,98 @@ const Checkout = () => {
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
-            </section>
+            </section> */}
             <Accordion type="single" collapsible>
               <AccordionItem value="item-1">
                 <AccordionTrigger className="bg-slate-100 px-4">View Capture Context</AccordionTrigger>
                 <AccordionContent>
-                  <JsonEditor
-                    INITIAL_JSON={initJson}
-                    onSave={handleSave}
-                    onReset={handleReset}
-                  />
+                  <JsonEditor />
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+
+            {/* <section>
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-stone-800 flex items-center gap-3">
+                  Payment Method
+                </h3>
+                <p className="text-slate-500 mt-1 text-sm">
+                  Choose how you&apos;d like to pay for your order.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {methods.map((method) => {
+                  const isSelected = selectedMethod === method.id;
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => setSelectedMethod(method.id)}
+                      className={`w-full relative flex items-start gap-4 p-4 rounded-md border-2 transition-all duration-200 text-left outline-none focus:ring-1 focus:ring-emerald-500 outline-0 ${isSelected
+                        ? "border-emerald-600 bg-emerald-400/25 hover:bg-emerald-400/30 shadow-sm"
+                        : "border-slate-100 hover:border-slate-300 bg-white"
+                        }`}
+                    >
+                      <div className="w-14 h-14 flex items-center justify-center">
+                        <Image
+                          src={method.icon}
+                          alt={method.title}
+                          width={38}
+                          height={38}
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span
+                            className={`font-medium ${isSelected && "text-emerald-600"
+                              }`}
+                          >
+                            {method.title}
+                          </span>
+                          {isSelected && (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-600 animate-in zoom-in duration-300" />
+                          )}
+                        </div>
+                        <p
+                          className={cn(
+                            "text-sm",
+                            isSelected && "text-emerald-700"
+                          )}
+                        >
+                          {method.description}
+                        </p>
+                      </div>
+
+                      {isSelected && (
+                        <span className="absolute -top-2 -right-2 bg-[#d2883d] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                          {method.tag}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+
+                {selectedMethod === "card" ? (
+                  <div className="space-y-4">
+                    {loading && (
+                      <div className="space-y-3">
+                        <div className="h-12 rounded-full bg-white/10 animate-pulse" />
+                        <div className="h-['320px'] rounded-xl bg-white/10 animate-pulse" />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="w-full bg-emerald-600 text-white py-6 rounded-full text-base md:text-lg hover:bg-emerald-700 transition-all transform active:scale-95"
+                    disabled={loading}
+                  >
+                    Confirm Order
+                  </Button>
+                )}
+              </div>
+            </section> */}
           </div>
           <div className="bg-emerald-900/95 backdrop-blur-3xl p-4 md:p-6 rounded-lg text-emerald-400 h-fit sticky top-24 shadow-sm">
             <h3 className="font-bold text-2xl mb-8">Summary</h3>
@@ -355,18 +333,17 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between text-stone-400 font-medium">
                 <span>Delivery</span>
-                <span>$0.00</span>
+                <span>$0.50</span>
               </div>
               <div className="flex justify-between font-black text-3xl pt-4">
                 <span>Total</span>
                 <span className="text-[#D4A373]">
-                  ${totalAmount.toFixed(2)}
+                  ${(totalAmount + 0.5).toFixed(2)}
                 </span>
               </div>
             </div>
             <Button
               variant={"secondary"}
-              onClick={goNext}
               className="w-full bg-emerald-600 text-white py-6 rounded-full text-base md:text-lg hover:bg-emerald-700 transition-all transform active:scale-95"
             >
               Confirm Order

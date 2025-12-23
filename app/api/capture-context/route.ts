@@ -10,41 +10,62 @@ const secretKey = process.env.CS_SECRET_KEY!; // base64
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const payload = JSON.stringify({
-    targetOrigins: ["https://localhost:3000", "https://coffee-hub-beta.vercel.app"],
-    clientVersion: "0.32",
-    allowedCardNetworks: ["VISA", "MASTERCARD", "AMEX"],
-    allowedPaymentTypes: ["PANENTRY"],
-    country: "KH",
-    locale: "en_US",
-    buttonType: "PAY",
-    captureMandate: {
-      billingType: "NONE",
-      requestEmail: false,
-      requestPhone: false,
-      requestShipping: false,
-      shipToCountries: ["KH"],
-      showAcceptedNetworkIcons: false,
-      showConfirmationStep: false,
-    },
-    completeMandate: {
-      type: "PREFER_AUTH",
-      decisionManager: false,
-      consumerAuthentication: true,
-    },
-    orderInformation: {
-      amountDetails: {
-        totalAmount: body.amount,
-        currency: "USD",
+  const payload = JSON.stringify(
+    {
+      "targetOrigins": [
+        "https://localhost:3000"
+      ],
+      "clientVersion": "0.32",
+      "allowedCardNetworks": [
+        "VISA",
+        "MASTERCARD",
+        "AMEX"
+      ],
+      "allowedPaymentTypes": [
+        "PANENTRY"
+      ],
+      "country": "KH",
+      "locale": "en_US",
+      "captureMandate": {
+        "billingType": "NONE",
+        "requestEmail": false,
+        "requestPhone": false,
+        "requestShipping": false,
+        "shipToCountries": [
+          "KH"
+        ],
+        "showAcceptedNetworkIcons": true
       },
-      billTo: {
-        email: body.email || "W2iVz@example.com",
-        firstName: body.firstName || "John",
-        lastName: body.lastName || "Doe",
-        address1: body.address || "1 Market St",
+      "completeMandate": {
+        "type": "AUTH",
+        "decisionManager": true,
+        "consumerAuthentication": true
       },
-    },
-  });
+      "orderInformation": {
+        "amountDetails": {
+          "totalAmount": `${body.amount}`,
+          "currency": "USD"
+        },
+        "billTo": {
+          "address1": body.address || "No 22, St Lum, Tagnov Kandal, Nirouth, Chba Ampove",
+          "administrativeArea": "KH-12",
+          "buildingNumber": "22",
+          "country": "KH",
+          "district": "Niroth",
+          "locality": "Phnom Penh",
+          "postalCode": "10172",
+          "email": body.email || "neth.phan@gmail.com",
+          "firstName": body.firstName || "Neth",
+          "lastName": body.lastName || "Phan",
+          "middleName": "M",
+          "title": "Mr",
+          "phoneNumber": "85577773783"
+        }
+      }
+    }
+  );
+
+  console.log(payload);
 
   // Log the payload where the request come from
   console.log("Request origin:", req.headers.get("origin"));
