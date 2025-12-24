@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Coffee Hub (Beta)
 
-## Getting Started
+Coffee Hub is a modern e-commerce web application that demonstrates a **full card payment flow using CyberSource Unified Checkout**.  
+The project showcases how a custom online store can securely accept card payments without redirecting users away from the site.
 
-First, run the development server:
+🔗 Live Demo: https://coffee-hub-beta.vercel.app/
+
+---
+
+## Overview
+
+Coffee Hub is built as a sample online coffee store where users can:
+- Browse products
+- Add items to cart
+- Complete payments using **CyberSource Unified Checkout**
+
+The checkout experience is fully embedded using CyberSource’s JavaScript SDK
+
+---
+
+## Key Features
+
+- Product listing and cart flow
+- CyberSource **Unified Checkout** integration
+- Secure card payment (no raw card data handled by merchant)
+- Built with modern React / Next.js
+- Responsive UI (desktop & mobile)
+- Deployed on Vercel
+
+---
+
+## Payment Flow (Unified Checkout)
+
+1. User proceeds to checkout
+2. Backend generates a **Capture Context JWT** from CyberSource
+3. Frontend loads CyberSource Unified Checkout JS
+4. Secure payment form is rendered
+5. User submits card details
+6. CyberSource processes authorization / capture
+7. Transaction result is returned to the merchant backend
+
+> The merchant application never directly handles sensitive card information.
+
+---
+
+## Environment Variables
+Create a `.env` file:
+
+```env
+CS_HOST=apitest.cybersource.com
+
+CS_MERCHANT_ID=your_merchant_id
+CS_KEY_ID=your_key_id
+CS_SECRET_KEY=your_secret_key
+
+SERVER_API_URL=server_url_call_to_generate_capture_context
+```
+**Never expose secret keys on the client side**
+
+---
+## Run Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Test Payments (Sandbox)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Use the following CyberSource sandbox test cards for payment testing:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Standard Test Cards
+- **Visa:** `4111 1111 1111 1111`
+- **Expiry Date:** Any future date
+- **CVV:** Any 3 digits
 
-## Learn More
+### 3DS Challenge Test Cards
+- **Visa (3DS Challenge):** `4456 5300 0000 1096`
+- **Mastercard (3DS Challenge):** `5200 0000 0000 1096`
 
-To learn more about Next.js, take a look at the following resources:
+### Special Scenario
+- **Visa (Special Test Case):** `4000 0000 0000 2503`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> All cards above are **sandbox-only** and will trigger specific authentication flows such as **3D Secure challenges**.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

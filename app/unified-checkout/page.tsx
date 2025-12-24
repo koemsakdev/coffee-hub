@@ -123,8 +123,9 @@ const UnifiedCheckoutPage = () => {
             } else {
               router.replace(`/fails?token=${completeResponse}`);
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error("Payment error:", err);
+            alert(err.message)
             checkoutObserver?.disconnect();
             router.replace("/");
           }
