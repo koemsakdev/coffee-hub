@@ -141,21 +141,25 @@ const UnifiedCheckoutPage = () => {
   }, [clearCard, payload, router]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="min-h-screen bg-slate-50 py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-blue-100">
+    <div className="flex flex-col min-h-screen" id="checkoutPage">
+      <div className="min-h-screen bg-linear-to-r backdrop-blur-sm from-[#000000]/50 via-[#000000]/50 to-blue-500/80 py-12 px-4 sm:px-6 lg:px-8 font-sans selection:bg-lime-500 selection:text-lime-200">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-12">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-2 rounded-lg">
-                <ShieldCheck className="w-6 h-6 text-white" />
-              </div>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col items-start gap-2">
+              <Image
+                src={'/wb-logo.svg'}
+                width={200}
+                height={200}
+                alt="Wing Bank Logo"
+                className="object-contain h-10 w-auto"
+              />
               <div className="flex flex-col gap-1">
-                <h1 className="text-xl font-bold text-slate-900 leading-none">
-                  CyberSource
-                </h1>
-                <p className="text-xs text-slate-500 font-medium tracking-widest uppercase">
-                  Unified Checkout
+                {/* <h1 className="text-xl text-blue-500 text-shadow-blue-500 font-bold leading-none">
+                  Wing Bank Cambodia Plc
+                </h1> */}
+                <p className="text-xs text-white font-medium tracking-widest uppercase">
+                  Payment Gateway Simulation
                 </p>
               </div>
             </div>
@@ -174,7 +178,7 @@ const UnifiedCheckoutPage = () => {
 
           {/* Footer */}
           <footer className="mt-16 pt-8 border-t border-slate-200 text-center space-y-4">
-            <div className="flex justify-center items-center gap-8 opacity-40">
+            <div className="flex justify-center items-center gap-8">
               <Image
                 src={
                   "https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg"
@@ -194,9 +198,8 @@ const UnifiedCheckoutPage = () => {
                 height={42}
               />
             </div>
-            <p className="text-xs text-slate-400">
-              &copy; 2025 Payment Gateway Simulation. Powered by CyberSource
-              Solutions. All transactions are protected by tokenization
+            <p className="text-xs text-white">
+              &copy; 2025 Payment Gateway Simulation. Powered by <b>Wing Bank (Cambodia) Plc</b>. All transactions are protected by tokenization
               technology.
             </p>
           </footer>
