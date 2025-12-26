@@ -2,7 +2,6 @@
 
 import { Separator } from "@/components/ui/separator";
 import { decodeJWT } from "@/utils";
-import { ShieldCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

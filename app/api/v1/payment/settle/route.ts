@@ -3,10 +3,19 @@ import axios from "axios";
 const url = process.env.SERVER_API_URL!;
 export async function POST(req: Request) {
     const body = await req.json();
+
+    const payload = JSON.stringify({
+        "clientReferenceInformation": { "code": body.client_reference },
+        "orderInformation": {
+            "amountDetails": { "totalAmount": parseFloat(body.amount).toFixed(2), "currency": body.currency }
+        }
+    });
+
+    console.log("Payload for Settlement:", payload);
     try {
         const cyberResp = await axios.post(
-            `${url}/api/v1/card/payment/capture-contexts`,
-            body,
+            `${url}/api/v1/card/payment/payment-capture?paymentId=${body.transaction_id}`,
+            payload,
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -19,14 +28,9 @@ export async function POST(req: Request) {
             }
         );
 
-
-
         return Response.json({
             status: cyberResp.status,
-            ctx: cyberResp.data.ctx,
-            token: cyberResp.data.token,
-            client_library: cyberResp.data.clientLibrary,
-            integrity: cyberResp.data.clientLibraryIntegrity
+            data: cyberResp.data
         });
     } catch (error: any) {
         return Response.json(

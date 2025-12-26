@@ -15,6 +15,15 @@ const decodeJWT = (token: string) => {
   }
 }
 
+const base64Decode = (str: string) => {
+  const decodedString = atob(str);
+  try {
+    return JSON.parse(decodedString);
+  } catch {
+    return decodedString;
+  }
+}
+
 function formatDateTime(isoString: string | number | Date) {
     return new Date(isoString).toLocaleString("en-US", {
         dateStyle: "medium",
@@ -23,4 +32,4 @@ function formatDateTime(isoString: string | number | Date) {
 }
 
 
-export { generateUniqueId, decodeJWT, formatDateTime };
+export { generateUniqueId, decodeJWT, formatDateTime, base64Decode };

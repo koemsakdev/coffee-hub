@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Coffee, ShoppingCart } from "lucide-react";
+import { BadgeDollarSign, Coffee, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { useHydratedStore } from "@/hooks/useHydratedStore";
 import { useRouter } from "next/navigation";
@@ -32,7 +32,7 @@ const NavigationBar = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           <Button
             variant={"secondary"}
             onClick={() => router.push("/cart")}
@@ -44,6 +44,13 @@ const NavigationBar = () => {
                 {cartCount}
               </span>
             )}
+          </Button>
+          <Button
+            variant={"secondary"}
+            onClick={() => router.push("/settlement")}
+            className="px-3 py-5 bg-blue-500 hover:bg-blue-600 rounded-sm text-white transition-all group"
+          >
+            <BadgeDollarSign size={24} />
           </Button>
         </div>
       </div>
